@@ -33,7 +33,7 @@ mpfitting=0
 ;attenuation
 if not keyword_set(attenuation) then attenuation=1.0 ;add to adjust the ADC counts to account for a filter
 
-;0102 filter ND 0.6; reduces to 0.238 of unfiltered signal or 
+;0102 filter ND 0.6; reduces to 0.238 of unfiltered signal or
 ;multiply by 1/0.238=4.202 to go from filtered to unfiltered
 
 lambda_range=lambda_range*1e-6 ;in metres
@@ -87,7 +87,7 @@ for i=0, n_elements(dirs)-1 do begin
 				'bg_'+strtrim(string(fix(integration[j])),2)+'us.asc'
 			print, fname_bg
 			img=read_ascii(fname, delimiter=' ', data_start=29)
-			bck=read_ascii(fname_bg, delimiter=' ', data_start=29)		
+			bck=read_ascii(fname_bg, delimiter=' ', data_start=29)
 		endif
 		counts=img.field001-bck.field001
 
@@ -105,7 +105,7 @@ for i=0, n_elements(dirs)-1 do begin
 		temp[i,j]=temps[i]
 		bck_data[i,j]=backg
 		raw_data[i,j]=raw
-		
+
 		;convert the temperatures into photons and store
 		photons[i,j]=blackbody_phot(temp[i,j]+273., lambda_range)
 
@@ -114,15 +114,16 @@ for i=0, n_elements(dirs)-1 do begin
 		;;wait,1
 
 	endfor
-	
+
 endfor
 
-;correct for the attenuation of any neutral density filters added in the 
+;correct for the attenuation of any neutral density filters added in the
 ;system
 data=data*attenuation
 
 window, 0
-psyms=[1,4,5,6,7,8,4,5,6,7,8,1,4,5,6,7,8,1,4,5,6,7,8]
+;psyms=[1,4,5,6,7,8,4,5,6,7,8,1,4,5,6,7,8,1,4,5,6,7,8]
+psyms=[1,4,5,6,7,2,4,5,6,7,2,1,4,5,6,7,2,1,4,5,6,7,2]  ; replace user defined with asterisks
 plot, [0,max(tint)], [0,max(data)], /nodata
 for i=0, n_elements(dirs)-1 do begin
 	oplot, tint[i,*], data[i,*], psym=psyms[i]
@@ -168,15 +169,15 @@ for i=0, n_elements(integ)-1 do begin
 	;some points will saturate - remove
 	cut_sat=where(rawc lt 14000)
 ;	fit=ladfit(xfit[cut_sat], yfit[cut_sat])
-	
+
 	if cut_sat[0] ne -1 then begin
-	
+
 	start=poly_fit(xfit[cut_sat], yfit[cut_sat], 1)
 
 	fit=mpfitfun('linear', xfit[cut_sat], yfit[cut_sat], $
-		sqrt(yfit[cut_sat]), start);, perror=err)
+		sqrt(yfit[cut_sat]), start, perror=err)
 
-	endif else fit=[0,0]	
+	endif else fit=[0,0]
 
 	xv=(findgen(50)/49.)*14000
 
@@ -185,7 +186,7 @@ for i=0, n_elements(integ)-1 do begin
 		xtitle='!3 Temp (!uo!nC)', $
 		ytitle='!3 ADC counts', $
 		title='!3 '+string(integ[i])+'us'
-	
+
 	plot, data[sel],photons[sel],  psym=8, $
 		position=[0.6,0.15,0.9,0.6], $
 		ytitle='!3 Photon flux', $
@@ -269,7 +270,7 @@ if keyword_set(ps) then begin
 endif
 
 ;fitted results
-;plot the results against 1/integration time and then fit the result to 
+;plot the results against 1/integration time and then fit the result to
 ;get the calibration curves for the a and b component of the linear
 ;fit at a given integration time
 
@@ -285,7 +286,7 @@ plot, 1./t_integration, fitted[0,*], psym=8, $
 oploterror, 1./t_integration, fitted[0,*], error[0,*], psym=3
 
 xfit=1./t_integration
-fit_a=mpfitfun('linear', xfit, fitted[0,*], error[0,*], fitted[*,0]);,$	
+fit_a=mpfitfun('linear', xfit, fitted[0,*], error[0,*], fitted[*,0]);,$
 					;perror=error_a)
 xv=(findgen(100)/99.)*0.5
 oplot, xv, fit_a[0]+(fit_a[1]*xv), col=truecolor('red')
@@ -422,7 +423,7 @@ delta_plot=0.15
 
 	setup_ps, /unset
 
-endif 
+endif
 
 ;make a version of the B fit plot that expands the small value range - want
 ;to understand wh ythe LWIR data has poor error at long integration times
@@ -528,7 +529,7 @@ if keyword_set(ps) then begin
 endif
 ;===============================================================
 
-stop
+;stop
 
 if keyword_set(ps) then begin
 	atpsopen, filename=folder+'calib_all_tintscaled.eps'
@@ -725,7 +726,7 @@ endif
 ;calculate counts at 60deg vs tint
 window, 16
 calc_counts=data_delta[0]*(tints/100)
-plot, tints, calc_counts, psym=8                       
+plot, tints, calc_counts, psym=8
 oplot, tints, data_delta, psym=8, col=truecolor('red')
 
 
