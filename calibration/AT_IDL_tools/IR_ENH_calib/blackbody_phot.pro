@@ -25,13 +25,13 @@ n_phot=((2*!pi*c)/(lambda)^4)*(1/(exp((h*c)/(k*lambda*temp))-1))
 lambda=((findgen(1001)/1000)*(lambda_range[1]-lambda_range[0]))+lambda_range[0]
 n_phot=((2*!dpi*c)/(lambda)^4)*(1/(exp((h*c)/(k*lambda*temp))-1))
 
-;oplot, lambda, n_phot, color=truecolor('red')
+plot, lambda, n_phot, color=truecolor('red')
 
-;print, 'N_phot', int_tabulated(lambda, n_phot)
+print, 'N_phot', int_tabulated(lambda, n_phot)
 
 n_photons=int_tabulated(lambda, n_phot)
 
-;stop
+stop
 
 return, n_photons
 

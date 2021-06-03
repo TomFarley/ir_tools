@@ -6,3 +6,4 @@ ir_tools.egg-info/
 .coverage
 **.bkup
 tmp/
+**/plots/*

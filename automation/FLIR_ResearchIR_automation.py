@@ -1,17 +1,14 @@
-import win32api,win32con
+
 import os
 import time as tm
 import numpy as np
 from datetime import datetime
 from pathlib import Path
 
-def click(x,y):
-	win32api.SetCursorPos((x,y))
-	win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,x,y,0,0)
-	win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,x,y,0,0)
+from ir_automation import (click, move, get_fns_and_dirs, copy_files, copy_dir, delete_files_in_dir,
+    read_shot_number, write_shot_number)
 
-def move(x,y):
-	win32api.mouse_event(win32con.MOUSEEVENTF_MOVE | win32con.MOUSEEVENTF_ABSOLUTE,x,y,0,0)
+
 
 date = datetime.now().strftime('%Y-%m-%d')
 path_output = f'D:\\MAST-U_Operations\\AIR-FLIR_1\\{date}'
