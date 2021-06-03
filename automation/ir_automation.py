@@ -15,20 +15,16 @@ from typing import Union, Iterable, Sequence, Tuple, Optional, Any, Dict
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
-import xarray as xr
-import matplotlib.pyplot as plt
-
-import pyuda
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
-client = pyuda.Client()
-
 
 def auto_update_next_shot_file(fn_shot='/home/tfarley/ccfepc/T/tfarley/next_mast_u_shot_no.csv', t_refresh=1,
                                n_print=5):
+    import pyuda
+    client = pyuda.Client()
+    
     n = 0
     while True:
         try:
