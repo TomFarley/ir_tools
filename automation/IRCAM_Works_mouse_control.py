@@ -192,7 +192,7 @@ def auto_trigger(path_hdd_out):
                 print(f'\nCamera NOT in armed state: {datetime.now()}')  #\n{fns}')
                 if previous_armed_state is True:
                     post_pulse = True
-                    time.sleep(6)  # Wait for recording to finish
+                    time.sleep(10)  # Wait for recording to finish
                     
                     status = export_movie(shot_number)
                     if status is True:
@@ -200,10 +200,10 @@ def auto_trigger(path_hdd_out):
                         copy_dir(path_todays_pulses, path_t_drive)
                     
                     print(f'Waiting {n_min_wait_post_pulse} mins after shot {shot_number} before re-arming to ensure pulse train has finished from previous shot: {datetime.now()}')
-                    time.sleep(n_min_wait_post_pulse*60) # you need to leave this pause when it detects that the record is done. otherwise it clicks too early.
-                    post_pulse = False
                     shot_number += 1    
                     write_shot_number(fn_shot, shot_number)          
+                    time.sleep(n_min_wait_post_pulse*60) # you need to leave this pause when it detects that the record is done. otherwise it clicks too early.
+                    post_pulse = False
                 
                 print(f'Clicking record button at {tuple(pixel_coords["record_button"])} ({n_dirs} dirs) {datetime.now()}')
                 click(*tuple(pixel_coords["record_button"]))  # click record button
