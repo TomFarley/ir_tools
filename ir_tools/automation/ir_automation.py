@@ -19,19 +19,27 @@ import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
 
-import pyuda
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
+import pyuda
 client = pyuda.Client()
+
+
+def latest_uda_shot_number():
+    import pyuda
+    client = pyuda.Client()
+    shot_no_last = int(client.latest_shot())
+    return shot_no_last
 
 def update_next_shot_file(shot_no_next, fn_shot='/home/tfarley/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
                           t_delay=0, verbose=True):
     shot_no_file = read_shot_number(fn_shot=fn_shot)
 
-    if shot_no_file != shot_no_next:
-        print(f'Incorrect shot number {shot_no_file} in {fn_shot}: {datetime.now()}')
+    if (shot_no_file != shot_no_next) or (shot_no_file is None):
+        print(f'Incorrect shot number {shot_no_file} in {fn_shot}, waiting {t_delay} mins to update file: '
+              f'{datetime.now()}')
         time.sleep(t_delay*60)
         write_shot_number(fn_shot=fn_shot, shot_number=shot_no_next)
     else:
@@ -39,15 +47,30 @@ def update_next_shot_file(shot_no_next, fn_shot='/home/tfarley/ccfepc/T/tfarley/
             print(f'Shot number {shot_no_file} is correct: {datetime.now()}')
 
 def auto_update_next_shot_file(fn_shot='/home/tfarley/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
-                               t_refresh=2, t_delay=1, n_print=5):
+                               t_refresh=2, t_delay=3, n_print=5):
     n = 0
     while True:
         try:
-            shot_no_last = int(client.latest_shot())
+            shot_no_last = latest_uda_shot_number()
             shot_no_next = shot_no_last + 1
             update_next_shot_file(shot_no_next, fn_shot=fn_shot, t_delay=t_delay, verbose=(n % n_print == 0))
             time.sleep(t_refresh * 60)
             n += 1
+        except KeyboardInterrupt:
+            print(f'Script terminated: {datetime.now()}')
+            break
+        pass
+
+def monitor_uda_latest_shot(t_refresh=2):
+    shot_no_prev = None
+    while True:
+        try:
+            shot_no_current = latest_uda_shot_number()
+            print(f'{shot_no_current} ({datetime.now()})')
+            if shot_no_current != shot_no_prev:
+                print(f'\n********** Shot no updated at {datetime.now()} **********\n')
+            shot_no_prev = shot_no_current
+            time.sleep(t_refresh)
         except KeyboardInterrupt:
             print(f'Script terminated: {datetime.now()}')
             break
@@ -115,13 +138,17 @@ def delete_files_in_dir(path, glob='*'):
 
 
 def read_shot_number(fn_shot):
-    with open(fn_shot) as csv_file:
-        reader = csv.reader(csv_file)
-        data = []
-        for row in reader:
-            data.append(row)
-    shot_number = int(data[0][0])
-    # print(f'Read shot number {shot_number} from {fn_shot} ({datetime.now()}')
+    try:
+        with open(fn_shot) as csv_file:
+            reader = csv.reader(csv_file)
+            data = []
+            for row in reader:
+                data.append(row)
+        shot_number = int(data[0][0])
+        # print(f'Read shot number {shot_number} from {fn_shot} ({datetime.now()}')
+    except Exception as e:
+        shot_number = None
+        print(f'Failed to read shot number file: {fn_shot}')
     return shot_number
 
 
@@ -134,4 +161,5 @@ def write_shot_number(fn_shot, shot_number):
 
 if __name__ == '__main__':
     auto_update_next_shot_file()
+    # monitor_uda_latest_shot()
     # update_next_shot_file(44140)

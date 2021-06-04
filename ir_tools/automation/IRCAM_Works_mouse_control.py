@@ -34,6 +34,7 @@ pixel_coords = {'record_button': [580, 766],  #  1920 x 1080, not full screen
                 'save': [400, 400],
                 'rename': [50, 400]
                 }
+
 for key, value in pixel_coords.items():
     pixel_coords[key] = np.array(value, dtype=int)
 

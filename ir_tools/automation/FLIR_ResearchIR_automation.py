@@ -53,6 +53,8 @@ try:
 			# for i in range(20):
 			print(f'Clicking record {datetime.now()}')
 			click(360,55)
+			# click(550,1070)    # position for full screen Altair
+
 			# print('just clicked record')
 			old_number_of_files = new_number_of_files
 		else:
