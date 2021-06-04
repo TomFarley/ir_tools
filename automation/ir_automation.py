@@ -69,6 +69,13 @@ def get_fns_and_dirs(path_hdd_out):
     # print(f'Current numnber of dirs: {n_dirs}')
     return fns, dirs_top
 
+def filenames_in_dir(path):
+    f = []
+    for (dirpath,dirnames,filenames) in os.walk(path):
+        f.append(filenames)
+        break
+    f = list(np.concatenate(f))
+    return f
 
 def copy_files(path_from, path_to, append_from_name=False):
     if append_from_name:
