@@ -15,18 +15,28 @@ from typing import Union, Iterable, Sequence, Tuple, Optional, Any, Dict
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
-import xarray as xr
-import matplotlib.pyplot as plt
-
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
-import pyuda
-client = pyuda.Client()
 
+def auto_update_next_shot_file(fn_shot='/home/tfarley/ccfepc/T/tfarley/next_mast_u_shot_no.csv', t_refresh=1,
+                               n_print=5):
+    import pyuda
+    client = pyuda.Client()
 
+    n = 0
+    while True:
+        try:
+            shot_no_file = read_shot_number(fn_shot=fn_shot)
+            shot_no_last = int(client.latest_shot())
+            shot_no_next = shot_no_last + 1
+            if shot_no_file != shot_no_next:
+                print(f'Incorrect shot number {shot_no_file} in {fn_shot}: {datetime.now()}')
+                write_shot_number(fn_shot=fn_shot, shot_number=shot_no_next)
+            else:
+                if n // n_print == 0:
+                    print(f'Shot number {shot_no_file} is correct: {datetime.now()}')
 def latest_uda_shot_number():
     import pyuda
     client = pyuda.Client()
@@ -101,6 +111,13 @@ def get_fns_and_dirs(path_hdd_out):
     # print(f'Current numnber of dirs: {n_dirs}')
     return fns, dirs_top
 
+def filenames_in_dir(path):
+    f = []
+    for (dirpath,dirnames,filenames) in os.walk(path):
+        f.append(filenames)
+        break
+    f = list(np.concatenate(f))
+    return f
 
 def copy_files(path_from, path_to, append_from_name=False):
     if append_from_name:
