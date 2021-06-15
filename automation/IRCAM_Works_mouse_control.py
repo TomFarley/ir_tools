@@ -91,11 +91,20 @@ def auto_trigger(path_hdd_out):
     print(f"""\nRunning automated IRCAM Works recorder. Please ensure:
               1) The IRCAM Works software is maximised
               2) "HDD recording" is set to record to "{path_hdd_out}"
-              3) The camera is set to "Trigger: yes" 
+              3) The camera is set to "Trigger: yes"
               4) The live view of the camera is set to display in 'camera units' (required for raw export)
               5) No windows are blocking the red record button
-              6) The next shot number is "{shot_number}" (update in script if incorrect)
-              7) The screen resolution is 1920 x 1080\n""")
+              6) The T: drive is mounted and accessible (may require re-entering windows credentials)
+              7) The next shot number is "{shot_number}" (update in script if incorrect)
+              8) The T: drive has sufficient space to copy new movie files (may require deleting previously transfered files)
+              9) The screen resolution is 1920 x 1080
+              10) Do not resize the width of the left hand or bottom pannels in Works!\n
+
+              This script will:
+              1) Automate clicking the record button after a movie has been recorded
+              2) Export the recording to a .raw movie file
+              3) Copy the exported movie to a directory under todays date
+              4) Copy the exported movie to the T drive for processing on freia""")
 
     fns, dirs_top = get_fns_and_dirs(path_hdd_out)
     n_dirs_initial = len(dirs_top)
@@ -144,7 +153,7 @@ def auto_trigger(path_hdd_out):
                 
                 print(f'Clicking record button at {tuple(pixel_coords["record_button"])} ({n_dirs} dirs) {datetime.now()}')
                 click(*tuple(pixel_coords["record_button"]))  # click record button
-                time.sleep(0.5)
+                time.sleep(5)
 
                 fns, dirs_top = get_fns_and_dirs(path_hdd_out)
                 armed, armed_fn = check_for_armed_file(fns)
@@ -155,6 +164,10 @@ def auto_trigger(path_hdd_out):
                     time.sleep(n_min_wait_post_pulse*60)
                 else:
                     print(f'\n\nWARNING: FAILED to re-arm camera: {datetime.now()}\n')
+                    time.sleep(0.1*60)
+                    print('Pressing F9 to try to arm camera')
+                    keyboard.press(Key.f9)
+                    time.sleep(0.1*60)
             else:
                 if previous_armed_state is False:
                     print(f'Camera armed for shot {shot_number} - no action required: {datetime.now()}')
