@@ -37,6 +37,11 @@ def auto_update_next_shot_file(fn_shot='/home/tfarley/ccfepc/T/tfarley/next_mast
             else:
                 if n // n_print == 0:
                     print(f'Shot number {shot_no_file} is correct: {datetime.now()}')
+        except KeyboardInterrupt:
+            print(f'Script terminated: {datetime.now()}')
+            break
+        pass
+
 def latest_uda_shot_number():
     import pyuda
     client = pyuda.Client()
