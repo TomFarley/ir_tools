@@ -134,7 +134,11 @@ def copy_files(path_from, path_to, append_from_name=False):
     for fn in fns:
         fn_from = Path(path_from) / fn
         fn_to = Path(path_to) / fn
-        fn_to.write_bytes(fn_from.read_bytes())
+        try:
+            fn_to.write_bytes(fn_from.read_bytes())
+        except FileNotFoundError as e:
+            print(f'\nFailed to copy file from {path_from} to {path_to}:\n{e}\n')
+        
     print(f'Coppied {fns} from {path_from} to {path_to}')
     time.sleep(1)
 
