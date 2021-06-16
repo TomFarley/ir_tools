@@ -34,10 +34,10 @@ def automate_research_ir():
 	# delete_files_in_dir(path_auto_export, glob='*.ats')
 
 	if not path_local_today.is_dir():
-		path_local_today.mkdir(existsok=True)
+		path_local_today.mkdir()  # existsok=True)
 		print(f'Created directory: {path_local_today}')
 	if not path_t_drive_today.is_dir():
-		path_local_today.mkdir(existsok=True)
+		path_t_drive_today.mkdir()  # existsok=True)
 		print(f'Created directory: {path_local_today}')
 
 	f = filenames_in_dir(path_auto_export)
@@ -48,30 +48,32 @@ def automate_research_ir():
 	try:
 		while True:
 			move(int(np.random.random()*10000),int(np.random.random()*10000))  # stop logout
-			
+
 			f = filenames_in_dir(path_auto_export)
-		
+
 			new_number_of_files = len(f)
 
-			# print(f'{datetime.now()}: {new_number_of_files} files.')
-						
+			# print(f'{new_number_of_files} files. Waiting {t_wait} mins for next check {datetime.now()}')
+
 			# time.sleep(5*3)
 			if new_number_of_files!=old_number_of_files:
 				# for i in range(20):
 				print(f'{datetime.now()}: {new_number_of_files} files. New file present. Waiting {t_post_pulse} min for clock pulse train to finish.')
+				
 				time.sleep(t_post_pulse*60)
 				print(f'{datetime.now()}: Clicking record')
 				click(360,55)
+				
 				# print('just clicked record')
 				old_number_of_files = new_number_of_files
-				time.sleep(0.5*60)
+				
 				# print(f'Copying files to {path_local_today}')
 				copy_files(path_auto_export, path_local_today)
 				# print(f'Copying files to {path_t_drive_today}')
 				# copy_files(path_auto_export, path_t_drive_today)
 			else:
 				pass
-				# print(f'{datetime.now()}: {new_number_of_files} files. No need to click. Waiting {t_update} mins for next check.')
+				print(f'{datetime.now()}: {new_number_of_files} files. No need to click. Waiting {t_update} mins for next check.')
 				time.sleep(t_update*60)
 
 	except KeyboardInterrupt:
