@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 logger.propagate = False
 
 
-def auto_update_next_shot_file(fn_shot='/home/tfarley/ccfepc/T/tfarley/next_mast_u_shot_no.csv', t_refresh=1,
+def auto_update_next_shot_file(fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv', t_refresh=1,
                                n_print=5):
     import pyuda
     client = pyuda.Client()
@@ -32,13 +32,13 @@ def auto_update_next_shot_file(fn_shot='/home/tfarley/ccfepc/T/tfarley/next_mast
             shot_no_last = int(client.latest_shot())
             shot_no_next = shot_no_last + 1
             if shot_no_file != shot_no_next:
-                print(f'Incorrect shot number {shot_no_file} in {fn_shot}: {datetime.now()}')
+                print(f'{datetime.now()}: Incorrect shot number {shot_no_file} in {fn_shot} (should be {shot_no_next})')
                 write_shot_number(fn_shot=fn_shot, shot_number=shot_no_next)
             else:
                 if n // n_print == 0:
-                    print(f'Shot number {shot_no_file} is correct: {datetime.now()}')
+                    print(f'{datetime.now()}: Shot number {shot_no_file} is correct')
         except KeyboardInterrupt:
-            print(f'Script terminated: {datetime.now()}')
+            print(f'{datetime.now()}: Script terminated')
             break
         pass
 
@@ -160,6 +160,7 @@ def delete_files_in_dir(path, glob='*'):
 
 
 def read_shot_number(fn_shot):
+    fn_shot = Path(fn_shot).expanduser()
     try:
         with open(fn_shot) as csv_file:
             reader = csv.reader(csv_file)
