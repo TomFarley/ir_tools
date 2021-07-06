@@ -48,7 +48,7 @@ def latest_uda_shot_number():
     shot_no_last = int(client.latest_shot())
     return shot_no_last
 
-def update_next_shot_file(shot_no_next, fn_shot='/home/tfarley/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
+def update_next_shot_file(shot_no_next, fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
                           t_delay=0, verbose=True):
     shot_no_file = read_shot_number(fn_shot=fn_shot)
 
@@ -61,7 +61,7 @@ def update_next_shot_file(shot_no_next, fn_shot='/home/tfarley/ccfepc/T/tfarley/
         if verbose:
             print(f'Shot number {shot_no_file} is correct: {datetime.now()}')
 
-def auto_update_next_shot_file(fn_shot='/home/tfarley/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
+def auto_update_next_shot_file(fn_shot='/~/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
                                t_refresh=2, t_delay=3, n_print=5):
     n = 0
     while True:
@@ -176,6 +176,7 @@ def read_shot_number(fn_shot):
 
 
 def write_shot_number(fn_shot, shot_number):
+    fn_shot = Path(fn_shot).expanduser()
     with open(fn_shot, 'w') as csv_file:
         writer = csv.writer(csv_file)
         writer.writerow([shot_number])
