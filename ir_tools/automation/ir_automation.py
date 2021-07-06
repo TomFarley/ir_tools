@@ -61,7 +61,7 @@ def update_next_shot_file(shot_no_next, fn_shot='~/ccfepc/T/tfarley/next_mast_u_
         if verbose:
             print(f'Shot number {shot_no_file} is correct: {datetime.now()}')
 
-def auto_update_next_shot_file(fn_shot='/~/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
+def auto_update_next_shot_file(fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
                                t_refresh=2, t_delay=3, n_print=5):
     n = 0
     while True:
