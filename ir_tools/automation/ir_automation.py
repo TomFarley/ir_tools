@@ -124,17 +124,20 @@ def filenames_in_dir(path):
     f = list(np.concatenate(f))
     return f
 
-def copy_files(path_from, path_to, append_from_name=False):
+def copy_files(path_from, path_to, append_from_name=False, create_destination=True):
     if append_from_name:
         path_to = path_to / path_from.name
-    if not path_to.is_dir():
+    if (not path_to.is_dir()) and create_destination:
         path_to.mkdir()
         print(f'Created new directory {path_to}')
     fns, dirs = get_fns_and_dirs(path_from)
     for fn in fns:
         fn_from = Path(path_from) / fn
         fn_to = Path(path_to) / fn
-        fn_to.write_bytes(fn_from.read_bytes())
+        try:
+            fn_to.write_bytes(fn_from.read_bytes())
+        except Exception as e:
+            print(e)
     print(f'Coppied {fns} from {path_from} to {path_to}')
     time.sleep(1)
 
@@ -145,9 +148,13 @@ def copy_dir(path_from, path_to, append_from_name=True):
     if not path_to.is_dir():
         path_to.mkdir()
         print(f'Created new directory {path_to}')
-    shutil.copytree(path_from, path_to, dirs_exist_ok=True)
-    print(f'Copied {path_from} to {path_to}')
-    time.sleep(1)
+    try:
+        shutil.copytree(path_from, path_to, dirs_exist_ok=True)
+    except Exception as e:
+        print(e)
+    else:
+        print(f'Copied {path_from} to {path_to}')
+    time.sleep(0.5)
 
 
 def delete_files_in_dir(path, glob='*'):
@@ -175,10 +182,14 @@ def read_shot_number(fn_shot):
 
 
 def write_shot_number(fn_shot, shot_number):
-    with open(fn_shot, 'w') as csv_file:
-        writer = csv.writer(csv_file)
-        writer.writerow([shot_number])
-    print(f'Wrote shot number {shot_number} to {fn_shot} ({datetime.now()}')
+    try:
+        with open(fn_shot, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerow([shot_number])
+    except Exception as e:
+        print(e)
+    else:
+        print(f'Wrote shot number {shot_number} to {fn_shot} ({datetime.now()}')
 
 
 if __name__ == '__main__':
