@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 logger.propagate = False
 
 
-def auto_update_next_shot_file(fn_shot='/home/tfarley/ccfepc/T/tfarley/next_mast_u_shot_no.csv', t_refresh=1,
+def auto_update_next_shot_file(fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv', t_refresh=1,
                                n_print=5):
     import pyuda
     client = pyuda.Client()
@@ -32,13 +32,13 @@ def auto_update_next_shot_file(fn_shot='/home/tfarley/ccfepc/T/tfarley/next_mast
             shot_no_last = int(client.latest_shot())
             shot_no_next = shot_no_last + 1
             if shot_no_file != shot_no_next:
-                print(f'Incorrect shot number {shot_no_file} in {fn_shot}: {datetime.now()}')
+                print(f'{datetime.now()}: Incorrect shot number {shot_no_file} in {fn_shot} (should be {shot_no_next})')
                 write_shot_number(fn_shot=fn_shot, shot_number=shot_no_next)
             else:
                 if n // n_print == 0:
-                    print(f'Shot number {shot_no_file} is correct: {datetime.now()}')
+                    print(f'{datetime.now()}: Shot number {shot_no_file} is correct')
         except KeyboardInterrupt:
-            print(f'Script terminated: {datetime.now()}')
+            print(f'{datetime.now()}: Script terminated')
             break
         pass
 
@@ -48,7 +48,7 @@ def latest_uda_shot_number():
     shot_no_last = int(client.latest_shot())
     return shot_no_last
 
-def update_next_shot_file(shot_no_next, fn_shot='/home/tfarley/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
+def update_next_shot_file(shot_no_next, fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
                           t_delay=0, verbose=True):
     shot_no_file = read_shot_number(fn_shot=fn_shot)
 
@@ -61,7 +61,7 @@ def update_next_shot_file(shot_no_next, fn_shot='/home/tfarley/ccfepc/T/tfarley/
         if verbose:
             print(f'Shot number {shot_no_file} is correct: {datetime.now()}')
 
-def auto_update_next_shot_file(fn_shot='/home/tfarley/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
+def auto_update_next_shot_file(fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
                                t_refresh=2, t_delay=3, n_print=5):
     n = 0
     while True:
@@ -136,8 +136,9 @@ def copy_files(path_from, path_to, append_from_name=False, create_destination=Tr
         fn_to = Path(path_to) / fn
         try:
             fn_to.write_bytes(fn_from.read_bytes())
-        except Exception as e:
-            print(e)
+        except FileNotFoundError as e:
+            print(f'\nFailed to copy file from {path_from} to {path_to}:\n{e}\n')
+
     print(f'Coppied {fns} from {path_from} to {path_to}')
     time.sleep(1)
 
@@ -167,6 +168,7 @@ def delete_files_in_dir(path, glob='*'):
 
 
 def read_shot_number(fn_shot):
+    fn_shot = Path(fn_shot).expanduser()
     try:
         with open(fn_shot) as csv_file:
             reader = csv.reader(csv_file)
@@ -190,7 +192,6 @@ def write_shot_number(fn_shot, shot_number):
         print(e)
     else:
         print(f'Wrote shot number {shot_number} to {fn_shot} ({datetime.now()}')
-
 
 if __name__ == '__main__':
     auto_update_next_shot_file()
