@@ -53,9 +53,10 @@ def update_next_shot_file(shot_no_next, fn_shot='~/ccfepc/T/tfarley/next_mast_u_
     shot_no_file = read_shot_number(fn_shot=fn_shot)
 
     if (shot_no_file != shot_no_next) or (shot_no_file is None):
-        print(f'Incorrect shot number {shot_no_file} in {fn_shot}, waiting {t_delay} mins to update file: '
-              f'{datetime.now()}')
-        time.sleep(t_delay*60)
+        print(f'{datetime.now()}: Incorrect shot number "{shot_no_file}" in {fn_shot}')
+        if shot_no_file is not None:
+            print('Waiting {t_delay} mins to update file')
+            time.sleep(t_delay*60)
         write_shot_number(fn_shot=fn_shot, shot_number=shot_no_next)
     else:
         if verbose:
@@ -99,7 +100,7 @@ def click(x, y):
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, x, y, 0, 0)
 
 
-def move(x, y):
+def move_mouse(x, y):
     import win32api, win32con
     """Move mouse. x, y units are not display pixel coords"""
     win32api.mouse_event(win32con.MOUSEEVENTF_MOVE | win32con.MOUSEEVENTF_ABSOLUTE, x, y, 0, 0)
