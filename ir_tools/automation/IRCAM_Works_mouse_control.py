@@ -16,11 +16,15 @@ keyboard = Controller()
 # shot_number = 44103
     
 # path_hdd_out = 'D:\\IRVB\\2021-05-20'
+date_str = datetime.now().strftime('%Y-%m-%d')
+
 path_hdd_out = Path(r'D:\\MAST-U\LWIR_IRCAM1_HM04-A\Operations\To_be_exported')
 path_auto_export = Path(f'D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export')
+path_auto_export_backup = Path(f'D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export_backup')
 path_t_drive = Path(f'T:\\tfarley\\RIT\\')
-path_todays_pulses = path_auto_export.parent / datetime.now().strftime('%Y-%m-%d')
-fn_shot = path_t_drive / '../next_mast_u_shot_no.csv'
+path_t_drive_today = path_t_drive / date_str
+path_todays_pulses = path_auto_export.parent / date_str
+fn_shot = (path_t_drive / '../next_mast_u_shot_no.csv').resolve()
 
 n_min_wait_dir_refresh = 0.25
 n_min_wait_post_pulse = 2
@@ -34,7 +38,6 @@ pixel_coords = {'record_button': [580, 766],  #  1920 x 1080, not full screen
                 'save': [400, 400],
                 'rename': [50, 400]
                 }
-
 for key, value in pixel_coords.items():
     pixel_coords[key] = np.array(value, dtype=int)
 
@@ -110,10 +113,11 @@ def auto_trigger(path_hdd_out):
     fns, dirs_top = get_fns_and_dirs(path_hdd_out)
     n_dirs_initial = len(dirs_top)
 
+    copy_files(path_auto_export, path_auto_export_backup)
     print('Deleting exported files from previous day')
     delete_files_in_dir(path_auto_export, glob='*.RAW')
 
-    print(f'Initial numnber of movie dirs in path: {n_dirs_initial}')
+    print(f'{datetime.now()}: Initial numnber of movie dirs in path: {n_dirs_initial}')
 
     armed = False
     post_pulse = False
@@ -123,7 +127,7 @@ def auto_trigger(path_hdd_out):
             shot_number_prev = shot_number
             shot_number = read_shot_number(fn_shot)  # Keep reading file incase file on T drive updated
             if shot_number != shot_number_prev:
-                print(f'Read updated shot number "{shot_number}" from {fn_shot}')
+                print(f'{datetime.now()}: Read updated shot number "{shot_number}" from {fn_shot}')
 
             # move(int(np.random.random()*10000),int(np.random.random()*10000)) # Stop lock screen
             previous_armed_state = armed
@@ -136,42 +140,44 @@ def auto_trigger(path_hdd_out):
 
             # time.sleep(5*3)
             if not armed:
-                print(f'\nCamera NOT in armed state: {datetime.now()}')  #\n{fns}')
+                print(f'\n{datetime.now()}: Camera NOT in armed state')  #\n{fns}')
                 if previous_armed_state is True:
                     post_pulse = True
                     time.sleep(10)  # Wait for recording to finish
                     
                     status = export_movie(shot_number)
                     if status is True:
-                        copy_files(path_auto_export, path_todays_pulses)
+                        copy_files(path_auto_export, path_todays_pulses, append_from_name=False, create_destination=True)
                         copy_dir(path_todays_pulses, path_t_drive)
                     
-                    print(f'Waiting {n_min_wait_post_pulse} mins after shot {shot_number} before re-arming to ensure pulse train has finished from previous shot: {datetime.now()}')
+                    print(f'{datetime.now()}: Waiting {n_min_wait_post_pulse} mins after shot {shot_number} before re-arming to ensure pulse train has finished from previous shot')
                     shot_number += 1    
                     write_shot_number(fn_shot, shot_number)          
                     time.sleep(n_min_wait_post_pulse*60) # you need to leave this pause when it detects that the record is done. otherwise it clicks too early.
                     post_pulse = False
                 
-                print(f'Clicking record button at {tuple(pixel_coords["record_button"])} ({n_dirs} dirs) {datetime.now()}')
+                print(f'{datetime.now()}: Clicking record button at {tuple(pixel_coords["record_button"])} ({n_dirs} dirs)')
                 click(*tuple(pixel_coords["record_button"]))  # click record button
+                keyboard.press(Key.ctrl)
+                keyboard.release(Key.ctrl)
                 time.sleep(5)
 
                 fns, dirs_top = get_fns_and_dirs(path_hdd_out)
                 armed, armed_fn = check_for_armed_file(fns)
                 n_dirs = len(dirs_top)
-                print(f'Current number of movie dirs in path: {n_dirs}')
+                print(f'{datetime.now()}: Current number of movie dirs in path: {n_dirs}')
                 if armed:
-                    print(f'\n========== {shot_number} ==========\nSuccessfully armed camera for shot {shot_number} with click to {tuple(pixel_coords["record_button"])}: {datetime.now()}\n')
+                    print(f'\n========== {shot_number} ==========\n{datetime.now()}: Successfully armed camera for shot {shot_number} with click to {tuple(pixel_coords["record_button"])}\n')
                     time.sleep(n_min_wait_post_pulse*60)
                 else:
-                    print(f'\n\nWARNING: FAILED to re-arm camera: {datetime.now()}\n')
+                    print(f'\n\n{datetime.now()}: WARNING: FAILED to re-arm camera\n')
                     time.sleep(0.1*60)
-                    print('Pressing F9 to try to arm camera')
+                    print(f'{datetime.now()}: Pressing F9 to try to arm camera')
                     keyboard.press(Key.f9)
                     time.sleep(0.1*60)
             else:
                 if previous_armed_state is False:
-                    print(f'Camera armed for shot {shot_number} - no action required: {datetime.now()}')
+                    print(f'{datetime.now()}: Camera armed for shot {shot_number} - no action required')
                     post_pulse = False
                 
                 # print(f'Waiting {n_min_wait_dir_refresh} mins for next status (armed={armed}) check: {datetime.now()}')
@@ -181,8 +187,11 @@ def auto_trigger(path_hdd_out):
             # fns
 
     except KeyboardInterrupt:
-        print(f'script terminated: {datetime.now()}')
+        print(f'{datetime.now()}: script terminated')
         pass
+    except Exception as e:
+        print(e)
+        time.sleep(10e3)
 
 
 if __name__ == '__main__':

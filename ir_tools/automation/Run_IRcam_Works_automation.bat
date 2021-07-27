@@ -1,0 +1,1 @@
+start cmd /k python D:\MAST-U\LWIR_IRCAM1_HM04-A\ir_tools\ir_tools\automation\IRCAM_Works_mouse_control.py
