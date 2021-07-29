@@ -20,62 +20,42 @@ logger = logging.getLogger(__name__)
 logger.propagate = False
 
 
-def auto_update_next_shot_file(fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv', t_refresh=1,
-                               n_print=5):
-    import pyuda
-    client = pyuda.Client()
-
+def auto_update_next_shot_file(fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
+                               t_refresh=2, t_delay=3, n_print=8):
+    fn_shot = Path(fn_shot).expanduser().resolve()
     n = 0
     while True:
         try:
-            shot_no_file = read_shot_number(fn_shot=fn_shot)
-            shot_no_last = int(client.latest_shot())
+            shot_no_last = latest_uda_shot_number()
             shot_no_next = shot_no_last + 1
-            if shot_no_file != shot_no_next:
-                print(f'{datetime.now()}: Incorrect shot number {shot_no_file} in {fn_shot} (should be {shot_no_next})')
-                write_shot_number(fn_shot=fn_shot, shot_number=shot_no_next)
-            else:
-                if n // n_print == 0:
-                    print(f'{datetime.now()}: Shot number {shot_no_file} is correct')
+            update_next_shot_file(shot_no_next, fn_shot=fn_shot, t_delay=t_delay * (n > 0), verbose=(n % n_print == 0))
+            time.sleep(t_refresh * 60)
+            n += 1
         except KeyboardInterrupt:
             print(f'{datetime.now()}: Script terminated')
             break
         pass
-
-def latest_uda_shot_number():
-    import pyuda
-    client = pyuda.Client()
-    shot_no_last = int(client.latest_shot())
-    return shot_no_last
 
 def update_next_shot_file(shot_no_next, fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
                           t_delay=0, verbose=True):
     shot_no_file = read_shot_number(fn_shot=fn_shot)
 
     if (shot_no_file != shot_no_next) or (shot_no_file is None):
-        print(f'{datetime.now()}: Incorrect shot number "{shot_no_file}" in {fn_shot}')
         if shot_no_file is not None:
-            print('Waiting {t_delay} mins to update file')
-            time.sleep(t_delay*60)
+            t_delay = 0
+        print(f'{datetime.now()}: Incorrect shot number "{shot_no_file}" in {fn_shot}. '
+              f'Waiting {t_delay} mins to update file')
+        time.sleep(t_delay*60)
         write_shot_number(fn_shot=fn_shot, shot_number=shot_no_next)
     else:
         if verbose:
-            print(f'Shot number {shot_no_file} is correct: {datetime.now()}')
+            print(f'{datetime.now()}: Shot number {shot_no_file} is correct')
 
-def auto_update_next_shot_file(fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
-                               t_refresh=2, t_delay=3, n_print=5):
-    n = 0
-    while True:
-        try:
-            shot_no_last = latest_uda_shot_number()
-            shot_no_next = shot_no_last + 1
-            update_next_shot_file(shot_no_next, fn_shot=fn_shot, t_delay=t_delay, verbose=(n % n_print == 0))
-            time.sleep(t_refresh * 60)
-            n += 1
-        except KeyboardInterrupt:
-            print(f'Script terminated: {datetime.now()}')
-            break
-        pass
+def latest_uda_shot_number():
+    import pyuda
+    client = pyuda.Client()
+    shot_no_last = int(client.latest_shot())
+    return shot_no_last
 
 def monitor_uda_latest_shot(t_refresh=2):
     shot_no_prev = None
@@ -88,7 +68,7 @@ def monitor_uda_latest_shot(t_refresh=2):
             shot_no_prev = shot_no_current
             time.sleep(t_refresh)
         except KeyboardInterrupt:
-            print(f'Script terminated: {datetime.now()}')
+            print(f'{datetime.now()}: Script terminated')
             break
         pass
 
@@ -180,11 +160,12 @@ def read_shot_number(fn_shot):
         # print(f'Read shot number {shot_number} from {fn_shot} ({datetime.now()}')
     except Exception as e:
         shot_number = None
-        print(f'Failed to read shot number file: {fn_shot}')
+        print(f'{datetime.now()}: Failed to read shot number file: {fn_shot}')
     return shot_number
 
 
 def write_shot_number(fn_shot, shot_number):
+    fn_shot = Path(fn_shot).expanduser().resolve()
     try:
         with open(fn_shot, 'w') as csv_file:
             writer = csv.writer(csv_file)
@@ -192,7 +173,7 @@ def write_shot_number(fn_shot, shot_number):
     except Exception as e:
         print(e)
     else:
-        print(f'Wrote shot number {shot_number} to {fn_shot} ({datetime.now()}')
+        print(f'{datetime.now()}: Wrote shot number {shot_number} to {fn_shot}')
 
 if __name__ == '__main__':
     auto_update_next_shot_file()
