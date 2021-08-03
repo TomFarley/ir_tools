@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 from pathlib import Path
 
-from ir_automation import (click, move, get_fns_and_dirs, copy_files, copy_dir, delete_files_in_dir,
+from ir_automation import (click, move_mouse, get_fns_and_dirs, copy_files, copy_dir, delete_files_in_dir,
     read_shot_number, write_shot_number, filenames_in_dir)
 
 date = datetime.now().strftime('%Y-%m-%d')
@@ -19,6 +19,7 @@ fn_shot = path_t_drive / '../next_mast_u_shot_no.csv'
 
 t_update = 0.5
 t_post_pulse = 2.5
+n_print = 5
 
 def automate_research_ir():
 
@@ -45,9 +46,12 @@ def automate_research_ir():
 	old_number_of_files = len(f)
 	# print(f[0])
 
+	print(f'Updates will be printed every {n_print*t_update} mins, with file checks every {t_update} mins')
+
 	try:
+		n = 0
 		while True:
-			move(int(np.random.random()*10000),int(np.random.random()*10000))  # stop logout
+			move_mouse(int(np.random.random()*10000),int(np.random.random()*10000))  # stop logout
 
 			f = filenames_in_dir(path_auto_export)
 
@@ -73,9 +77,10 @@ def automate_research_ir():
 				# copy_files(path_auto_export, path_t_drive_today)
 			else:
 				pass
-				print(f'{datetime.now()}: {new_number_of_files} files. No need to click. Waiting {t_update} mins for next check.')
+				if (n % n_print) == 0:
+					print(f'{datetime.now()}: {new_number_of_files} files. No need to click. Waiting {t_update} mins for next check. (n={n})')
 				time.sleep(t_update*60)
-
+				n += 1
 	except KeyboardInterrupt:
 		print('script terminated')
 		pass
