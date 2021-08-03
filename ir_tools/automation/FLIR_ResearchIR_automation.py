@@ -18,7 +18,7 @@ path_local_today = path_auto_export.parent / date
 fn_shot = path_t_drive / '../next_mast_u_shot_no.csv'
 
 t_update = 0.5
-t_post_pulse = 2
+t_post_pulse = 2.5
 
 def automate_research_ir():
 
