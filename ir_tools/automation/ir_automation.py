@@ -41,7 +41,7 @@ def update_next_shot_file(shot_no_next, fn_shot='~/ccfepc/T/tfarley/next_mast_u_
     shot_no_file = read_shot_number(fn_shot=fn_shot)
 
     if (shot_no_file != shot_no_next) or (shot_no_file is None):
-        if shot_no_file is not None:
+        if shot_no_file is None:
             t_delay = 0
         print(f'{datetime.now()}: Incorrect shot number "{shot_no_file}" in {fn_shot}. '
               f'Waiting {t_delay} mins to update file')
