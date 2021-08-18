@@ -10,6 +10,7 @@ from ir_automation import (click, move_mouse, get_fns_and_dirs, copy_files, copy
 
 date = datetime.now().strftime('%Y-%m-%d')
 path_auto_export = Path(f'D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export')
+path_auto_export_backup = Path(f'D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export_backup')
 # path_output = Path(f'D:\\MAST-U_Operations\\AIR-FLIR_1\\{date}')
 path_output = path_auto_export
 path_t_drive = Path(f'T:\\tfarley\\RIR\\')
@@ -19,7 +20,7 @@ fn_shot = path_t_drive / '../next_mast_u_shot_no.csv'
 
 t_update = 0.5
 t_post_pulse = 2.5
-n_print = 5
+n_print = 15
 
 def automate_research_ir():
 
@@ -31,8 +32,9 @@ def automate_research_ir():
 		- The record button has been pressed manually so the camera starts in armed state.
 		- ResearchIR is set to write ats files starting from the correct shot number""")
 
-	# print(f'Deleting previously exported files in {path_auto_export} (ideally from previous day)')
-	# delete_files_in_dir(path_auto_export, glob='*.ats')
+	print(f'Transfering previously exported files in {path_auto_export} to {path_auto_export_backup} (ideally from previous day)')
+	copy_files(path_auto_export, path_auto_export_backup)
+	delete_files_in_dir(path_auto_export, glob='*.ats')
 
 	if not path_local_today.is_dir():
 		path_local_today.mkdir()  # existsok=True)
