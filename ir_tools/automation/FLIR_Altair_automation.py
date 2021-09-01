@@ -22,15 +22,22 @@ t_update = 0.5
 t_post_pulse = 2.5
 n_print = 15
 
-def automate_research_ir():
+# record_pixel_coords = (360,55)  # ResearchIR
+record_pixel_coords = (550, 870)  # Altair
+record_tab_pixel_coords = (340, 1005)  # Altair
+camera_tab_pixel_coords = (200, 1005)  # Altair
+ext_trig_pixel_coords = (200, 870)  # Altair
+
+def automate_altair():
 
 	print(f'\nMonitoring {path_output}')
 
 	print(f"""Please ensure:
-		- ResearchIR is configured to write movies to {path_output}
-		- Red record button is active (as opposed to record settings)
+		- Altair is configured to write movies to {path_output}
+		- Frame rate, window size and integration time are set correctly
+		- Red record button is active (Recorder tab active)
 		- The record button has been pressed manually so the camera starts in armed state.
-		- ResearchIR is set to write ats files starting from the correct shot number""")
+		- Altair is set to write ptw files starting from the correct shot number""")
 
 	print(f'Transfering previously exported files in {path_auto_export} to {path_auto_export_backup} (ideally from previous day)')
 	copy_files(path_auto_export, path_auto_export_backup)
@@ -68,7 +75,9 @@ def automate_research_ir():
 				
 				time.sleep(t_post_pulse*60)
 				print(f'{datetime.now()}: Clicking record')
-				click(360,55)
+				click(record_tab_pixel_coords)
+				times.sleep(0.2)
+				click(record_pixel_coords)
 				
 				# print('just clicked record')
 				old_number_of_files = new_number_of_files
@@ -88,6 +97,6 @@ def automate_research_ir():
 		pass
 
 if __name__ == '__main__':
-	automate_research_ir()
+	automate_altair()
 
 
