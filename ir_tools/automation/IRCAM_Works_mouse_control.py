@@ -9,7 +9,7 @@ from pathlib import Path
 import csv
 
 from ir_automation import (click, get_fns_and_dirs, copy_files, copy_dir, delete_files_in_dir,
-    read_shot_number, write_shot_number)
+    read_shot_number, write_shot_number, mkdir)
 
 keyboard = Controller()
 
@@ -23,8 +23,12 @@ path_auto_export = Path(f'D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_c
 path_auto_export_backup = Path(f'D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export_backup')
 path_t_drive = Path(f'T:\\tfarley\\RIT\\')
 path_t_drive_today = path_t_drive / date_str
+path_freia = Path(f'H:\\data\\movies\\diagnostic_pc_transfer\\')
+path_freia_today = path_freia / date_str
 path_todays_pulses = path_auto_export.parent / date_str
-fn_shot = (path_t_drive / '../next_mast_u_shot_no.csv').resolve()
+# fn_shot = (path_t_drive / '../next_mast_u_shot_no.csv').resolve()
+fn_shot = (path_freia / 'next_mast_u_shot_no.csv').resolve()
+copy_to_freia = True
 
 n_min_wait_dir_refresh = 0.25
 n_min_wait_post_pulse = 2
@@ -117,6 +121,15 @@ def auto_trigger(path_hdd_out):
     print('Deleting exported files from previous day')
     delete_files_in_dir(path_auto_export, glob='*.RAW')
 
+    mkdir(path_todays_pulses)
+    if copy_to_freia:
+        mkdir(path_freia_today)
+        print(f'Raw movie files will be coppied to: {path_freia_today}')
+    else:
+        print('Raw movie files will not be coppied to freia')
+
+    print(f'Make sure shot numberis being updated in {fn_shot}')
+
     print(f'{datetime.now()}: Initial numnber of movie dirs in path: {n_dirs_initial}')
 
     armed = False
@@ -148,7 +161,8 @@ def auto_trigger(path_hdd_out):
                     status = export_movie(shot_number)
                     if status is True:
                         copy_files(path_auto_export, path_todays_pulses, append_from_name=False, create_destination=True)
-                        copy_dir(path_todays_pulses, path_t_drive)
+                        if copy_to_freia:
+                            copy_dir(path_todays_pulses, path_freia)
                     
                     print(f'{datetime.now()}: Waiting {n_min_wait_post_pulse} mins after shot {shot_number} before re-arming to ensure pulse train has finished from previous shot')
                     shot_number += 1    
