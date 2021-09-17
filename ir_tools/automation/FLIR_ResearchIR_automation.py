@@ -81,7 +81,12 @@ def automate_research_ir():
 
                 i_order, ages, fns_sorted = ir_automation.sort_files_by_age(fns_autosaved, path=path_auto_export)
                 pattern = '(\d+).ats'
-                saved_pulses = [int(re.match(pattern, fn).groups(0)) for fn in fns_sorted]
+                saved_pulses = []
+                for fn in fns_sorted:
+                    m = re.match(pattern, fn)
+                    pulse = int(m.groups()[0]) if m else None
+                    saved_pulses.append(pulse)
+
                 fn_new, age_fn_new, shot_fn_new = fns_sorted[0], ages[0], saved_pulses[0]
                 print(f'fns: {fns_sorted}')
                 print(f'pulses: {saved_pulses}')

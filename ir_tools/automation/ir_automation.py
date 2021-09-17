@@ -191,6 +191,7 @@ def get_fns_and_dirs(path_hdd_out):
     return fns, dirs_top
 
 def filenames_in_dir(path):
+    path = Path(path).expanduser().resolve()
     f = []
     for (dirpath,dirnames,filenames) in os.walk(path):
         f.append(filenames)
@@ -208,10 +209,11 @@ def age_of_file(fn_path, path=None):
 
 def sort_files_by_age(fns, path=None):
     fns = make_iterable(fns)
-    ages = [age_of_file(fn, path=path) for fn in fns]
+    ages = np.array([age_of_file(fn, path=path) for fn in fns])
     i_order = np.argsort(ages)
     fns_sorted = np.array(fns)[i_order]
-    return i_order, ages, fns_sorted
+    ages_sorted = ages[i_order]
+    return i_order, ages_sorted, fns_sorted
 
 def mkdir(path, parents=True):
     path = Path(path)
@@ -262,7 +264,7 @@ def delete_files_in_dir(path, glob='*'):
 
 
 def read_shot_number(fn_shot):
-    fn_shot = Path(fn_shot).expanduser()
+    fn_shot = Path(fn_shot).expanduser().resolve()
     try:
         with open(fn_shot) as csv_file:
             reader = csv.reader(csv_file)
