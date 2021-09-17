@@ -95,7 +95,7 @@ def automate_research_ir():
                 print(f'pulses: {saved_pulses}')
                 print(f'ages: {ages}')
                 if new_number_of_files > 0:
-                    fn_new, age_fn_new, shot_fn_new = fns_sorted[0], ages[0], saved_pulses[0]
+                    fn_new, age_fn_new, shot_fn_new = Path(fns_sorted[0]), ages[0], saved_pulses[0]
                     print(f'{datetime.now()}: File "{fn_new}" for shot {shot_fn_new} ({shot_number} expected) saved '
                           f'{age_fn_new:0.1f} s ago')
 
