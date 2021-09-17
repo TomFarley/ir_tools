@@ -15,8 +15,12 @@ import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
 
+from ir_tools.automation.ir_automation import auto_update_next_shot_file
+
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
+fn = '~/ccfepc/T/tfarley/next_mast_u_shot_no.csv'
+
 if __name__ == '__main__':
-    pass
+    auto_update_next_shot_file(fn_shot=fn, organise_ircam_raw=True, run_sched=False)

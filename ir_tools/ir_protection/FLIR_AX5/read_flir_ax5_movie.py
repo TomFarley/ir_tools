@@ -27,8 +27,8 @@ def read_seq(path_fn):
     import flirpy
     from flirpy.io import seq
     splitter = seq.splitter(str(path_fn.parent))#, width=, height=)
-    splitter.process([str(path_fn)])
-    data = flirpy.io.seq
+    data = splitter.process([str(path_fn)])
+    # data = flirpy.io.seq
     return data
 
 

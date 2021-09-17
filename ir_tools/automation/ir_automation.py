@@ -21,14 +21,21 @@ logger.propagate = False
 
 
 def auto_update_next_shot_file(fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
-                               t_refresh=2, t_delay=3, n_print=8):
+                               t_refresh=2.0, t_delay=3.0, n_print=8,
+                               organise_ircam_raw=False, organise_flir_ats=False,
+                                rit_intershot_job=False, rir_intershot_job=False,
+                               run_sched=False):
     fn_shot = Path(fn_shot).expanduser().resolve()
+    print(f'Shot no csv file path: {fn_shot}')
     n = 0
     while True:
         try:
             shot_no_last = latest_uda_shot_number()
             shot_no_next = shot_no_last + 1
-            update_next_shot_file(shot_no_next, fn_shot=fn_shot, t_delay=t_delay * (n > 0), verbose=(n % n_print == 0))
+            update_next_shot_file(shot_no_next, fn_shot=fn_shot, t_delay=t_delay * (n > 0), verbose=(n % n_print == 0),
+                                  organise_ircam_raw=organise_ircam_raw, organise_flir_ats=organise_flir_ats, rit_intershot_job=rit_intershot_job,
+                                  rir_intershot_job=rir_intershot_job,
+                                  run_sched=run_sched)
             time.sleep(t_refresh * 60)
             n += 1
         except KeyboardInterrupt:
@@ -37,16 +44,53 @@ def auto_update_next_shot_file(fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.c
         pass
 
 def update_next_shot_file(shot_no_next, fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
-                          t_delay=0, verbose=True):
+                          t_delay=0, organise_ircam_raw=False, organise_flir_ats=False,
+                          rit_intershot_job=False, rir_intershot_job=False,
+                          run_sched=False, verbose=True):
     shot_no_file = read_shot_number(fn_shot=fn_shot)
 
     if (shot_no_file != shot_no_next) or (shot_no_file is None):
         if shot_no_file is None:
             t_delay = 0
-        print(f'{datetime.now()}: Incorrect shot number "{shot_no_file}" in {fn_shot}. '
+        print(f'{datetime.now()}: Incorrect shot number "{shot_no_file}" in {fn_shot} (should be "{shot_no_next}", '
+              f'diff={shot_no_next-shot_no_file if shot_no_file is not None else "N/A"}). '
               f'Waiting {t_delay} mins to update file')
         time.sleep(t_delay*60)
         write_shot_number(fn_shot=fn_shot, shot_number=shot_no_next)
+
+        if organise_ircam_raw:
+            from fire.scripts.organise_ircam_raw_files import organise_ircam_raw_files
+            print(f'{datetime.now()}: Organising IRcam raw files')
+            camera_settings = dict(camera='rit', fps=400, exposure=0.25e-3, lens=25e-3, t_before_pulse=1e-1)
+            path_in = '/home/tfarley/data/movies/diagnostic_pc_transfer/{today}/'
+            try:
+                organise_ircam_raw_files(path_in=path_in, camera_settings=camera_settings, n_files=1, write_ipx=True)
+            except OSError as e:
+                logger.warning(f'Failed to organise IRam raw files: {e}')
+
+        if organise_flir_ats:
+            from fire.scripts.organise_ircam_raw_files import convert_ats_files_archive_to_ipx
+            path_in = '~/data/movies/mast_u/rir_ats_files/{date}'
+            fn_meta = '/home/tfarley/data/movies/mast_u/rir_ats_files/rir_meta.json'
+            convert_ats_files_archive_to_ipx(pulses=[shot_no_file], path_in=path_in, copy_ats_file=True, fn_meta=fn_meta)
+
+        if rit_intershot_job:
+            from ir_tools.automation.rit_analyse_last_shot import submit_rit_intershot_job
+            submit_rit_intershot_job()
+
+        if rir_intershot_job:
+            from ir_tools.automation.rir_analyse_last_shot import submit_rir_intershot_job
+            submit_rir_intershot_job()
+
+        if run_sched:
+            # TODO: Run analysis in batch job
+            print(f'{datetime.now()}: Running scheduler workflow')
+            try:
+                from fire.scripts.scheduler_workflow import scheduler_workflow
+                scheduler_workflow(shot_no_next-1, camera='rit', machine='MAST_U')
+            except Exception as e:
+                print(e)
+                logger.warning(e)
     else:
         if verbose:
             print(f'{datetime.now()}: Shot number {shot_no_file} is correct')
@@ -176,6 +220,9 @@ def write_shot_number(fn_shot, shot_number):
         print(f'{datetime.now()}: Wrote shot number {shot_number} to {fn_shot}')
 
 if __name__ == '__main__':
-    auto_update_next_shot_file()
+    fn = '~/data/movies/diagnostic_pc_transfer/next_mast_u_shot_no.csv'
+    # fn = '~/ccfepc/T/tfarley/next_mast_u_shot_no.csv'
+    auto_update_next_shot_file(fn_shot=fn, t_refresh=0.25, t_delay=2.5, n_print=40, organise_ircam_raw=False,
+                               rit_intershot_job=True, rir_intershot_job=True)
     # monitor_uda_latest_shot()
     # update_next_shot_file(44140)
