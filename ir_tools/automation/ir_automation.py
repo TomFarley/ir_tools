@@ -198,15 +198,17 @@ def filenames_in_dir(path):
     f = list(np.concatenate(f))
     return f
 
-def age_of_file(fn_path):
+def age_of_file(fn_path, path=None):
+    if path is not None:
+        fn_path = Path(path) / fn_path
     t_now = time.time()
     t_day = 24*60*60
     t_age = t_now-os.path.getmtime(fn_path)
     return t_age
 
-def sort_files_by_age(fns):
+def sort_files_by_age(fns, path=None):
     fns = make_iterable(fns)
-    ages = [age_of_file(fn) for fn in fns]
+    ages = [age_of_file(fn, path=path) for fn in fns]
     i_order = np.argsort(ages)
     fns_sorted = np.array(fns)[i_order]
     return i_order, ages, fns_sorted

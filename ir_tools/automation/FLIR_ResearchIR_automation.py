@@ -79,7 +79,7 @@ def automate_research_ir():
                 # for i in range(20):
                 print(f'{datetime.now()}: {new_number_of_files} files. New file present. Waiting {t_post_pulse} min for clock pulse train to finish.')
 
-                i_order, ages, fns_sorted = ir_automation.sort_files_by_age(fns_autosaved)
+                i_order, ages, fns_sorted = ir_automation.sort_files_by_age(fns_autosaved, path=path_auto_export)
                 pattern = '(\d+).ats'
                 saved_pulses = [int(re.match(pattern, fn).groups(0)) for fn in fns_sorted]
                 fn_new, age_fn_new, shot_fn_new = fns_sorted[0], ages[0], saved_pulses[0]
