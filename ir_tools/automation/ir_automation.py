@@ -149,12 +149,17 @@ def filenames_in_dir(path):
     f = list(np.concatenate(f))
     return f
 
+def mkdir(path, parents=True):
+    path = Path(path)
+    if (not path.is_dir()):
+        path.mkdir(exist_ok=True, parents=parents)
+        print(f'Created new directory {path}')
+
 def copy_files(path_from, path_to, append_from_name=False, create_destination=True):
     if append_from_name:
         path_to = path_to / path_from.name
-    if (not path_to.is_dir()) and create_destination:
-        path_to.mkdir()
-        print(f'Created new directory {path_to}')
+    if create_destination:
+        mkdir(path_to)
     fns, dirs = get_fns_and_dirs(path_from)
     for fn in fns:
         fn_from = Path(path_from) / fn
