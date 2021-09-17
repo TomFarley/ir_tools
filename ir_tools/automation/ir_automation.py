@@ -223,7 +223,7 @@ def mkdir(path, parents=True):
 
 def copy_files(path_from, path_to, append_from_name=False, create_destination=True):
     if append_from_name:
-        path_to = path_to / path_from.name
+        path_to = path_to / path_from.namereview_latest_shots
     if create_destination:
         mkdir(path_to)
     fns, dirs = get_fns_and_dirs(path_from)

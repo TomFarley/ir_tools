@@ -110,7 +110,7 @@ def automate_research_ir():
 
                 time.sleep(t_post_pulse*60)
                 print(f'{datetime.now()}: Clicking record ({pixel_coords["record"]})')
-                click(pixel_coords["record"])
+                click(*pixel_coords["record"])
 
                 # print('just clicked record')
                 old_number_of_files = new_number_of_files
