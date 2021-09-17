@@ -26,6 +26,9 @@ t_update = 0.5
 t_post_pulse = 2.5
 n_print = 15
 
+pixel_coords = {}
+pixel_coords['record'] = (360, 55)
+
 def automate_research_ir():
 
     print(f'\nMonitoring {path_output}')
@@ -56,6 +59,7 @@ def automate_research_ir():
     old_number_of_files = len(fns_autosaved)
     # print(f[0])
     shot_number = read_shot_number(fn_shot)  # Keep reading file incase file on T drive updated
+    print(f'Next shot is {shot_number}')
 
     print(f'Updates will be printed every {n_print*t_update} mins, with file checks every {t_update} mins')
 
@@ -87,24 +91,26 @@ def automate_research_ir():
                     pulse = int(m.groups()[0]) if m else None
                     saved_pulses.append(pulse)
 
-                fn_new, age_fn_new, shot_fn_new = fns_sorted[0], ages[0], saved_pulses[0]
                 print(f'fns: {fns_sorted}')
                 print(f'pulses: {saved_pulses}')
                 print(f'ages: {ages}')
+                if new_number_of_files > 0:
+                    fn_new, age_fn_new, shot_fn_new = fns_sorted[0], ages[0], saved_pulses[0]
+                    print(f'{datetime.now()}: File "{fn_new}" for shot {shot_fn_new} ({shot_number} expected) saved '
+                          f'{age_fn_new:0.1f} s ago')
 
-                print(f'File "{fn_new}" for shot {shot_fn_new} ({shot_number} expected) saved {age_fn_new} s ago')
-                if shot_fn_new != shot_number:
-                    fn_expected = path_auto_export / f'{shot_number}.ats'
-                    if not fn_expected.is_file():
-                        print(f'Renaming latest file to: {fn_expected}')
-                        (path_auto_export / fn_new).rename(fn_expected.name)
-                    else:
-                        print(f'Expected shot no file already exists: {fn_expected}. Not sure how to rename {fn_new}\n'
-                              f'Pulses saved: {saved_pulses}')
+                    if shot_fn_new != shot_number:
+                        fn_expected = path_auto_export / f'{shot_number}.ats'
+                        if not fn_expected.is_file():
+                            print(f'{datetime.now()}: Renaming latest file from "{fn_new.name}" to "{fn_expected.name}"')
+                            (path_auto_export / fn_new).rename(fn_expected.name)
+                        else:
+                            print(f'Expected shot no file already exists: {fn_expected}. Not sure how to rename {fn_new}\n'
+                                  f'Pulses saved: {saved_pulses}')
 
                 time.sleep(t_post_pulse*60)
-                print(f'{datetime.now()}: Clicking record')
-                click(360, 55)
+                print(f'{datetime.now()}: Clicking record ({pixel_coords["record"]})')
+                click(pixel_coords["record"])
 
                 # print('just clicked record')
                 old_number_of_files = new_number_of_files
