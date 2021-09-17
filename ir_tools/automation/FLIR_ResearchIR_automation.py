@@ -83,6 +83,9 @@ def automate_research_ir():
                 pattern = '(\d+).ats'
                 saved_pulses = [int(re.match(pattern, fn).groups(0)) for fn in fns_sorted]
                 fn_new, age_fn_new, shot_fn_new = fns_sorted[0], ages[0], saved_pulses[0]
+                print(f'fns: {fns_sorted}')
+                print(f'pulses: {saved_pulses}')
+                print(f'ages: {ages}')
 
                 print(f'File "{fn_new}" for shot {shot_fn_new} ({shot_number} expected) saved {age_fn_new} s ago')
                 if shot_fn_new != shot_number:
