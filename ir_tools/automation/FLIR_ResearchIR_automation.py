@@ -100,10 +100,10 @@ def automate_research_ir():
                           f'{age_fn_new:0.1f} s ago')
 
                     if shot_fn_new != shot_number:
-                        fn_expected = path_auto_export / f'{shot_number}.ats'
+                        fn_expected = path_auto_export / f'0{shot_number}.ats'
                         if not fn_expected.is_file():
                             print(f'{datetime.now()}: Renaming latest file from "{fn_new.name}" to "{fn_expected.name}"')
-                            (path_auto_export / fn_new).rename(fn_expected.name)
+                            (path_auto_export / fn_new).rename(fn_expected)
                         else:
                             print(f'Expected shot no file already exists: {fn_expected}. Not sure how to rename {fn_new}\n'
                                   f'Pulses saved: {saved_pulses}')
