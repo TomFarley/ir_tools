@@ -7,3 +7,5 @@ ir_tools.egg-info/
 **.bkup
 tmp/
 **/plots/*
+*.err
+*.out

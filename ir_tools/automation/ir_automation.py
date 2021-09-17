@@ -20,6 +20,54 @@ logger = logging.getLogger(__name__)
 logger.propagate = False
 
 
+def make_iterable(obj: Any, ndarray: bool = False,
+                  cast_to: Optional[type] = None,
+                  cast_dict: Optional = None,
+                  # cast_dict: Optional[dict[type,type]]=None,
+                  nest_types: Optional = None,
+                  ignore_types: Optional = ()) -> Iterable:
+
+    # nest_types: Optional[Sequence[type]]=None) -> Iterable:
+    """Return itterable, wrapping scalars and strings when requried.
+
+    If object is a scalar nest it in a list so it can be iterated over.
+    If ndarray is True, the object will be returned as an array (note avoids scalar ndarrays).
+
+    Args:
+        obj         : Object to ensure is iterable
+        ndarray     : Return as a non-scalar np.ndarray
+        cast_to     : Output will be cast to this type
+        cast_dict   : dict linking input types to the types they should be cast to
+        nest_types  : Sequence of types that should still be nested (eg dict)
+        ignore_types: Types to not nest (eg if don't want to nest None)
+
+    Returns:
+
+    """
+    if not isinstance(ignore_types, (tuple, list)):
+        ignore_types = make_iterable(ignore_types, ndarray=False, ignore_types=())
+    if (obj in ignore_types) or (type(obj) in ignore_types):
+        # Don't nest this type of input
+        return obj
+
+    if not hasattr(obj, '__iter__') or isinstance(obj, str):
+        obj = [obj]
+    if (nest_types is not None) and isinstance(obj, nest_types):
+        obj = [obj]
+    if (cast_dict is not None) and (type(obj) in cast_dict):
+        obj = cast_dict[type(obj)](obj)
+    if ndarray:
+        obj = np.array(obj)
+    if (cast_to is not None):
+        if isinstance(cast_to, (type, Callable)):
+            if cast_to == np.ndarray:
+                obj = np.array(obj)
+            else:
+                obj = cast_to(obj)  # cast to new type eg list
+        else:
+            raise TypeError(f'Invalid cast type: {cast_to}')
+    return obj
+
 def auto_update_next_shot_file(fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
                                t_refresh=2.0, t_delay=3.0, n_print=8,
                                organise_ircam_raw=False, organise_flir_ats=False,
@@ -131,6 +179,7 @@ def move_mouse(x, y):
 
 
 def get_fns_and_dirs(path_hdd_out):
+    """Return all filenames and dirnames recursively from path"""
     fns = []
     for i, (dirpath, dirnames, filenames) in enumerate(os.walk(path_hdd_out)):
         fns.append(filenames)
@@ -148,6 +197,19 @@ def filenames_in_dir(path):
         break
     f = list(np.concatenate(f))
     return f
+
+def age_of_file(fn_path):
+    t_now = time.time()
+    t_day = 24*60*60
+    t_age = t_now-os.path.getmtime(fn_path)
+    return t_age
+
+def sort_files_by_age(fns):
+    fns = make_iterable(fns)
+    ages = [age_of_file(fn) for fn in fns]
+    i_order = np.argsort(ages)
+    fns_sorted = np.array(fns)[i_order]
+    return i_order, ages, fns_sorted
 
 def mkdir(path, parents=True):
     path = Path(path)
