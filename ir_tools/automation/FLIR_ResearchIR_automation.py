@@ -101,7 +101,9 @@ def automate_research_ir():
 
                     if shot_fn_new != shot_number:
                         fn_expected = path_auto_export / f'0{shot_number}.ats'
-                        if not fn_expected.is_file():
+                        if (age_fn_new > 30) and (shot_number-fn_shot_new == 1):
+                        	print(f'Not renaming shot as script seems to have been delayed acting')
+                        elif not fn_expected.is_file():
                             print(f'{datetime.now()}: Renaming latest file from "{fn_new.name}" to "{fn_expected.name}"')
                             (path_auto_export / fn_new).rename(fn_expected)
                         else:
