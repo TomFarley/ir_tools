@@ -44,15 +44,9 @@ def automate_research_ir():
     copy_files(path_auto_export, path_auto_export_backup)
     delete_files_in_dir(path_auto_export, glob='*.ats')
 
-    if not path_local_today.is_dir():
-        path_local_today.mkdir()  # existsok=True)
-        print(f'Created directory: {path_local_today}')
-    if not path_t_drive_today.is_dir():
-        path_t_drive_today.mkdir()  # existsok=True)
-        print(f'Created directory: {path_local_today}')
-    if not path_freia_today.is_dir():
-        path_freia_today.mkdir()  # existsok=True)
-        print(f'Created directory: {path_freia_today}')
+    mkdir(path_local_today)
+    mkdir(path_freia_today)
+    # mkdir(path_t_drive_today)
 
     fns_autosaved = filenames_in_dir(path_auto_export)
 
@@ -101,7 +95,7 @@ def automate_research_ir():
 
                     if shot_fn_new != shot_number:
                         fn_expected = path_auto_export / f'0{shot_number}.ats'
-                        if (age_fn_new > 30) and (shot_number-fn_shot_new == 1):
+                        if (age_fn_new > t_update*60+2) and (shot_number-fn_shot_new == 1):
                         	print(f'Not renaming shot as script seems to have been delayed acting')
                         elif not fn_expected.is_file():
                             print(f'{datetime.now()}: Renaming latest file from "{fn_new.name}" to "{fn_expected.name}"')
