@@ -10,24 +10,27 @@ from ir_tools.automation.ir_automation import (click, move_mouse, get_fns_and_di
                                                filenames_in_dir, mkdir)
 from ir_tools.automation import ir_automation
 
+PATH_AUTO_EXPORT = Path(f'D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export')
+PATH_T_DRIVE = Path(f'T:\\tfarley\\RIR\\')
+PATH_FREIA = Path('H:\\data\\movies\\diagnostic_pc_transfer\\rir\\')
+
 date = datetime.now().strftime('%Y-%m-%d')
-path_auto_export = Path(f'D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export')
+
 path_auto_export_backup = Path(f'D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export_backup')
 # path_output = Path(f'D:\\MAST-U_Operations\\AIR-FLIR_1\\{date}')
-path_output = path_auto_export
-path_t_drive = Path(f'T:\\tfarley\\RIR\\')
-path_t_drive_today = path_t_drive / date
-path_freia = Path('H:\\data\\movies\\diagnostic_pc_transfer\\rir\\')
-path_freia_today = path_freia / date
-path_local_today = path_auto_export.parent / date
-fn_shot = path_freia / '../next_mast_u_shot_no.csv'
+path_output = PATH_AUTO_EXPORT
+path_t_drive_today = PATH_T_DRIVE / date
+path_freia_today = PATH_FREIA / date
+path_local_today = PATH_AUTO_EXPORT.parent / date
 
-t_update = 0.5
-t_post_pulse = 2.5
-n_print = 15
+fn_shot = PATH_FREIA / '../next_mast_u_shot_no.csv'
 
-pixel_coords = {}
-pixel_coords['record'] = (360, 55)
+T_UPDATE = 0.5
+T_POST_PULSE = 2.5
+N_PRINT = 15
+
+PIXEL_COORDS = {}
+PIXEL_COORDS['record'] = (360, 55)
 
 def automate_research_ir():
 
@@ -40,9 +43,10 @@ def automate_research_ir():
         - ResearchIR is set to write ats files starting from the correct shot number
         - Screen resolution is set to 1920 x 1080 ??? not 1200 ???""")
 
-    print(f'Transfering previously exported files in {path_auto_export} to {path_auto_export_backup} (ideally from previous day)')
-    copy_files(path_auto_export, path_auto_export_backup)
-    delete_files_in_dir(path_auto_export, glob='*.ats')
+    print(
+        f'Transfering previously exported files in {PATH_AUTO_EXPORT} to {path_auto_export_backup} (ideally from previous day)')
+    copy_files(PATH_AUTO_EXPORT, path_auto_export_backup)
+    delete_files_in_dir(PATH_AUTO_EXPORT, glob='*.ats')
 
     if not path_local_today.is_dir():
         path_local_today.mkdir()  # existsok=True)
@@ -54,21 +58,21 @@ def automate_research_ir():
         path_freia_today.mkdir()  # existsok=True)
         print(f'Created directory: {path_freia_today}')
 
-    fns_autosaved = filenames_in_dir(path_auto_export)
+    fns_autosaved = filenames_in_dir(PATH_AUTO_EXPORT)
 
     old_number_of_files = len(fns_autosaved)
     # print(f[0])
     shot_number = read_shot_number(fn_shot)  # Keep reading file incase file on T drive updated
     print(f'Next shot is {shot_number}')
 
-    print(f'Updates will be printed every {n_print*t_update} mins, with file checks every {t_update} mins')
+    print(f'Updates will be printed every {N_PRINT*T_UPDATE} mins, with file checks every {T_UPDATE} mins')
 
     try:
         n = 0
         while True:
             move_mouse(int(np.random.random()*10000),int(np.random.random()*10000))  # stop logout
 
-            fns_autosaved = filenames_in_dir(path_auto_export)
+            fns_autosaved = filenames_in_dir(PATH_AUTO_EXPORT)
             new_number_of_files = len(fns_autosaved)
 
             shot_number_prev = shot_number
@@ -81,49 +85,46 @@ def automate_research_ir():
             # time.sleep(5*3)
             if new_number_of_files!=old_number_of_files:
                 # for i in range(20):
-                print(f'{datetime.now()}: {new_number_of_files} files. New file present. Waiting {t_post_pulse} min for clock pulse train to finish.')
+                print(
+                    f'{datetime.now()}: {new_number_of_files} files. New file present. Waiting {T_POST_PULSE} min for clock pulse train to finish.')
 
-                i_order, ages, fns_sorted = ir_automation.sort_files_by_age(fns_autosaved, path=path_auto_export)
-                pattern = '(\d+).ats'
-                saved_pulses = []
-                for fn in fns_sorted:
-                    m = re.match(pattern, fn)
-                    pulse = int(m.groups()[0]) if m else None
-                    saved_pulses.append(pulse)
+                i_order, ages, fns_sorted = ir_automation.sort_files_by_age(fns_autosaved, path=PATH_AUTO_EXPORT)
+                saved_shots = ir_automation.shot_nos_from_fns(fns_sorted, pattern='(\d+).ats')
 
                 print(f'fns: {fns_sorted}')
                 print(f'pulses: {saved_pulses}')
                 print(f'ages: {ages}')
                 if new_number_of_files > 0:
-                    fn_new, age_fn_new, shot_fn_new = Path(fns_sorted[0]), ages[0], saved_pulses[0]
+                    fn_new, age_fn_new, shot_fn_new = Path(fns_sorted[0]), ages[0], saved_shots[0]
                     print(f'{datetime.now()}: File "{fn_new}" for shot {shot_fn_new} ({shot_number} expected) saved '
                           f'{age_fn_new:0.1f} s ago')
 
                     if shot_fn_new != shot_number:
-                        fn_expected = path_auto_export / f'0{shot_number}.ats'
+                        fn_expected = PATH_AUTO_EXPORT / f'0{shot_number}.ats'
                         if not fn_expected.is_file():
                             print(f'{datetime.now()}: Renaming latest file from "{fn_new.name}" to "{fn_expected.name}"')
-                            (path_auto_export / fn_new).rename(fn_expected)
+                            (PATH_AUTO_EXPORT / fn_new).rename(fn_expected)
                         else:
                             print(f'Expected shot no file already exists: {fn_expected}. Not sure how to rename {fn_new}\n'
                                   f'Pulses saved: {saved_pulses}')
 
-                time.sleep(t_post_pulse*60)
-                print(f'{datetime.now()}: Clicking record ({pixel_coords["record"]})')
-                click(*pixel_coords["record"])
+                time.sleep(T_POST_PULSE * 60)
+                print(f'{datetime.now()}: Clicking record ({PIXEL_COORDS["record"]})')
+                click(*PIXEL_COORDS["record"])
 
                 # print('just clicked record')
                 old_number_of_files = new_number_of_files
 
                 # print(f'Copying files to {path_local_today}')
-                copy_files(path_auto_export, path_local_today)
+                copy_files(PATH_AUTO_EXPORT, path_local_today)
                 print(f'Copying files to {path_freia_today}')
                 copy_files(path_local_today, path_freia_today)
             else:
                 pass
-                if (n % n_print) == 0:
-                    print(f'{datetime.now()}: {new_number_of_files} files. No need to click. Waiting {t_update} mins for next check. (n={n})')
-                time.sleep(t_update*60)
+                if (n % N_PRINT) == 0:
+                    print(
+                        f'{datetime.now()}: {new_number_of_files} files. No need to click. Waiting {T_UPDATE} mins for next check. (n={n})')
+                time.sleep(T_UPDATE * 60)
                 n += 1
     except KeyboardInterrupt:
         print('script terminated')

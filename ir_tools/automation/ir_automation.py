@@ -7,7 +7,7 @@ Created:
 """
 import csv
 import logging
-import os
+import os, re
 import shutil
 import time
 from datetime import datetime
@@ -19,6 +19,8 @@ import numpy as np
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
+YES = '✓'
+NO = '✕'
 
 def make_iterable(obj: Any, ndarray: bool = False,
                   cast_to: Optional[type] = None,
@@ -67,6 +69,24 @@ def make_iterable(obj: Any, ndarray: bool = False,
         else:
             raise TypeError(f'Invalid cast type: {cast_to}')
     return obj
+
+def check_freia_access():
+    # check if network drive is mounted
+    FPATH_FREIA = 'H:/'
+    if os.path.ismount(FPATH_FREIA):
+        freia_access = True
+        logger.info('freia access: ' + YES)
+    else:
+        freia_access = False
+        logger.info('freia access: ' + NO)
+
+def file_updated(path_fn, t_mod_prev=None):
+    t_mod = os.stat(path_fn).st_mtime
+    if (t_mod != t_mod_prev) or (t_mod_prev is None):
+        modified = True
+    else:
+        modified = False
+    return modified, t_mod
 
 def auto_update_next_shot_file(fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
                                t_refresh=2.0, t_delay=3.0, n_print=8,
@@ -214,6 +234,15 @@ def sort_files_by_age(fns, path=None):
     fns_sorted = np.array(fns)[i_order]
     ages_sorted = ages[i_order]
     return i_order, ages_sorted, fns_sorted
+
+def shot_nos_from_fns(file_names, pattern='(\d+).ats'):
+    saved_pulses = []
+    for fn in file_names:
+        fn = Path(fn).name
+        m = re.match(pattern, fn)
+        pulse = int(m.groups()[0]) if m else None
+        saved_pulses.append(pulse)
+    return saved_pulses
 
 def mkdir(path, parents=True):
     path = Path(path)
