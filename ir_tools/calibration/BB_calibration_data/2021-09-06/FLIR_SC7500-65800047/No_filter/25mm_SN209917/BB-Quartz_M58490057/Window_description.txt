@@ -1,4 +1,0 @@
-Quartz window borrowed from MU storage area in D2. Proxy for turbo pump window.
-ID: M58490057
-Material: Quartz
-Diameter: 90 mm

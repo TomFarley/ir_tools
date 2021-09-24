@@ -1,1 +1,0 @@
-All images saved from average of 100 frames to ASCII matrix format.
