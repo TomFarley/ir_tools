@@ -247,8 +247,12 @@ def shot_nos_from_fns(file_names, pattern='(\d+).ats'):
 def mkdir(path, parents=True):
     path = Path(path)
     if (not path.is_dir()):
-        path.mkdir(exist_ok=True, parents=parents)
-        print(f'Created new directory {path}')
+        try:
+            path.mkdir(exist_ok=True, parents=parents)
+        except FileExistsError as e:
+            print(f'Failed to create directory "{path}": {e}')
+        else:
+            print(f'Created new directory "{path}"')
 
 def copy_files(path_from, path_to, append_from_name=False, create_destination=True):
     if append_from_name:
@@ -262,6 +266,8 @@ def copy_files(path_from, path_to, append_from_name=False, create_destination=Tr
         try:
             fn_to.write_bytes(fn_from.read_bytes())
         except FileNotFoundError as e:
+            print(f'\nFailed to copy file from {path_from} to {path_to}:\n{e}\n')
+        except PermissionError as e:
             print(f'\nFailed to copy file from {path_from} to {path_to}:\n{e}\n')
 
     print(f'Coppied {fns} from {path_from} to {path_to}')
