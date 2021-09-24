@@ -31,7 +31,7 @@ TIME_DURATION_RECORD = 25  # sec. Duration of movie recording set in ResearchIR
 TIME_TYPICAL_MIN_INTERSHOT = 3 * 60  # sec. Normally at least 3 min between shots
 UPDATE_REMOTE_LOG_EVERY = 50  # loops. No point in updating this too often as Github pages site lag by ~20 min
 STOP_TIME = datetime.time(20, 10)
-PIXEL_COORDS_RECORD_WINDOW_1 = (360*3, 55)
+PIXEL_COORDS_RECORD_WINDOW_1 = (1465, 55)
 
 date = datetime.now().strftime('%Y-%m-%d')
 path_export_px_today = PATH_AUTO_EXPORT_PX_TAIL / date
