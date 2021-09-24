@@ -86,7 +86,7 @@ def automate_research_ir():
                 saved_shots = ir_automation.shot_nos_from_fns(fns_sorted, pattern='(\d+).ats')
 
                 print(f'fns: {fns_sorted}')
-                print(f'pulses: {saved_pulses}')
+                print(f'pulses: {saved_shots}')
                 print(f'ages: {ages}')
                 if new_number_of_files > 0:
                     fn_new, age_fn_new, shot_fn_new = Path(fns_sorted[0]), ages[0], saved_shots[0]
@@ -102,7 +102,7 @@ def automate_research_ir():
                             (PATH_AUTO_EXPORT / fn_new).rename(fn_expected)
                         else:
                             print(f'Expected shot no file already exists: {fn_expected}. Not sure how to rename {fn_new}\n'
-                                  f'Pulses saved: {saved_pulses}')
+                                  f'Pulses saved: {saved_shots}')
 
                 time.sleep(T_POST_PULSE * 60)
                 print(f'{datetime.now()}: Clicking record ({PIXEL_COORDS["record"]})')
