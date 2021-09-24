@@ -15,7 +15,8 @@ import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
 
-from fire.scripts.review_analysed_shots import review_latest_shots
+# from fire.scripts.review_analysed_shots import review_latest_shots
+from ir_analysis.scheduler_runs.review_analysed_shots import review_latest_shots
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
