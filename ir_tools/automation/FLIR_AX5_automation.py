@@ -92,11 +92,12 @@ def start_protection_camera_recording(pixel_coords):
     keyboard.release(Key.ctrl)
     keyboard.press(Key.f5)
 
-def organise_new_movie_file(PATH_AUTO_EXPORT_PX_TAIL, FN_FORMAT_MOVIE, shot, path_export_px_today, n_file_prev):
-    i_order_fns, ages_fns, fns_sorted = ir_automation.sort_files_by_age(PATH_AUTO_EXPORT_PX_TAIL)
+def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export_today, n_file_prev):
+    fns_autosaved = ir_automation.filenames_in_dir(path_auto_export)
+    i_order_fns, ages_fns, fns_sorted = ir_automation.sort_files_by_age(fns_autosaved)
     n_files = len(fns_sorted)
 
-    saved_shots = ir_automation.shot_nos_from_fns(fns_sorted, pattern=FN_FORMAT_MOVIE.format(shot='(\d+)'))
+    saved_shots = ir_automation.shot_nos_from_fns(fns_sorted, pattern=fn_format_movie.format(shot='(\d+)'))
     if n_files == n_file_prev:
         logger.warning(f'Number of files, {n_files}, has not changed after shot!')
 
@@ -105,15 +106,15 @@ def organise_new_movie_file(PATH_AUTO_EXPORT_PX_TAIL, FN_FORMAT_MOVIE, shot, pat
         logger.info(f'File "{fn_new}" for shot {shot_fn_new} ({shot} expected) saved {age_fn_new:0.1f} s ago')
         if (shot_fn_new != shot) and (age_fn_new < TIME_TYPICAL_MIN_INTERSHOT):
             if shot_fn_new != shot:
-                fn_expected = PATH_AUTO_EXPORT_PX_TAIL / FN_FORMAT_MOVIE.format(shot=shot)
+                fn_expected = path_auto_export / fn_format_movie.format(shot=shot)
                 if not fn_expected.is_file():
                     logger.info(f'Renaming latest file from "{fn_new.name}" to "{fn_expected.name}"')
-                    (PATH_AUTO_EXPORT_PX_TAIL / fn_new).rename(fn_expected)
+                    (path_auto_export / fn_new).rename(fn_expected)
                     fn_new = fn_expected
                 else:
                     logger.warning(f'Expected shot no file already exists: {fn_expected}. '
                                    f'Not sure how to rename {fn_new}\nPulses saved: {saved_pulses}')
-        dest = path_export_px_today.with_name(fn_new.name)
+        dest = path_export_today.with_name(fn_new.name)
         dest.write_bytes(fn_new.read_bytes())  # for binary files
         logger.info(f'Wrote new movie file to {dest}')
     return n_files
