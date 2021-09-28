@@ -12,3 +12,4 @@ ir_tools/calcam_calibration/calibration_images/
 *.out
 *.png
 *.csv~
+*.log
