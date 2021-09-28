@@ -94,7 +94,7 @@ def start_protection_camera_recording(pixel_coords):
 
 def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export_today, n_file_prev):
     fns_autosaved = ir_automation.filenames_in_dir(path_auto_export)
-    i_order_fns, ages_fns, fns_sorted = ir_automation.sort_files_by_age(fns_autosaved)
+    i_order_fns, ages_fns, fns_sorted = ir_automation.sort_files_by_age(fns_autosaved, path=path_auto_export)
     n_files = len(fns_sorted)
 
     saved_shots = ir_automation.shot_nos_from_fns(fns_sorted, pattern=fn_format_movie.format(shot='(\d+)'))

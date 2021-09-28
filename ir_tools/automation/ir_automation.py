@@ -213,7 +213,7 @@ def get_fns_and_dirs(path_hdd_out):
 def filenames_in_dir(path):
     path = Path(path).expanduser().resolve()
     f = []
-    for (dirpath,dirnames,filenames) in os.walk(path):
+    for (dirpath, dirnames, filenames) in os.walk(path):
         f.append(filenames)
         break
     f = list(np.concatenate(f))
