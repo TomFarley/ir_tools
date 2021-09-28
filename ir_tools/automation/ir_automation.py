@@ -240,7 +240,7 @@ def shot_nos_from_fns(file_names, pattern='(\d+).ats'):
     for fn in file_names:
         fn = Path(fn).name
         m = re.match(pattern, fn)
-        pulse = int(m.groups()[0]) if m else None
+        pulse = int(m.groups()[-1]) if m else None
         saved_pulses.append(pulse)
     return saved_pulses
 
