@@ -22,7 +22,7 @@ logger.propagate = False
 
 
 PATH_MSG_LOG = r'D:/mastda/DAProxy/log/'
-FNAME_MSG_LOG = f'prx{datetime.datetime.now().strftime("%y%m%d")}'
+FNAME_MSG_LOG = f'prx{datetime.datetime.now().strftime("%y%m%d")}.log'
 FPATH_MSG_LOG = Path(PATH_MSG_LOG) / FNAME_MSG_LOG
 FPATH_DA_PROXY = r'D:/mastda/DAProxy/proxy.exe'
 
@@ -149,7 +149,7 @@ def daproxy_control():
         time.sleep(REFRESH_TIME_MAIN_LOOP)
 
 
-def get_state(logger=None):
+def get_state(fn , logger=None):
     """ get current MAST-U state from MSG_LOG """
     states = {  # from N. Thomas-Davies
         '1': 'Stop',
@@ -172,7 +172,7 @@ def get_state(logger=None):
         '35': 'Arm',
         'UNDEFINED': 'UNDEFINED',
     }
-    state = states[from_msg_log('state', logger=logger)]
+    state = states[from_msg_log(fn, 'state', logger=logger)]
 
     if logger is not None:
         logger.info('state: ' + state)
@@ -180,20 +180,32 @@ def get_state(logger=None):
     return state
 
 
-def get_shot(logger=None):
+def get_shot(fn, logger=None):
     """ get current shot number from MSG_LOG """
-    shot = from_msg_log('shot', logger=logger)
+    shot = from_msg_log(fn, 'shot', logger=logger)
 
     if logger is not None:
         logger.info('shot: ' + shot)
 
-    return shot
+    return int(shot)
+
+def get_last_line_windows(fn):
+    with open(fn, 'r') as f:
+        lines = f.read().splitlines()
+        last_line = lines[-1]
+    return last_line
+
+def get_last_line_unix():
+    tail = subprocess.run(['tail', '-n', '1', fn], stdout=subprocess.PIPE, ).stdout.decode()
+    return tail
 
 
-def from_msg_log(field, logger=None):
+def from_msg_log(fn, field, logger=None):
     """ get current value corresponding to given field (str) from MSG LOG """
+    if not Path(fn).is_file():
+        logger.warmomg(f'Log file not found: {fn}')
     try:
-        tail = subprocess.run(['tail', '-n', '1', FPATH_MSG_LOG], stdout=subprocess.PIPE, ).stdout.decode()
+        tail = get_last_line_windows(fn)
         val = tail[tail.find(field + '='):][len(field + '='):]
         val = val[:val.find('&')]
 
