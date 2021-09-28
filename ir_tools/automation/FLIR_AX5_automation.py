@@ -28,7 +28,8 @@ AUTOMATE_DAPROXY = True
 
 FPATH_LOG = Path('protection.log')
 TIME_REFRESH_MAIN_LOOP = 5  # sec. The MAST-U Abort state seems to only last for ~10s
-TIME_DELEY_ARM_PRESHOT = 110  # sec. PreShot comes ~2min before shot
+TIME_DELEY_PRESHOT = 120  # sec. PreShot comes ~2min before shot
+TIME_RECORD_PRE_SHOT = 10  # sec. How long before shot is expected to start recording
 TIME_DURATION_RECORD = 15  # sec. Duration of movie recording set in ResearchIR
 TIME_TYPICAL_MIN_INTERSHOT = 3 * 60  # sec. Normally at least 3 min between shots
 UPDATE_REMOTE_LOG_EVERY = 50  # loops. No point in updating this too often as Github pages site lag by ~20 min
@@ -72,11 +73,12 @@ def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
         if shot != shot_prev:
             logger.info(f'{BARS} Shot number changed to {shot}. State: "{state}" {BARS}')
 
-        if state in ('Ready', 'PreShot', 'Trigger'):
-            logger.info(f'Entered state "{state}" for shot {shot}')
+        # if state in ('Ready', 'PreShot', 'Trigger', 'Abort'):
+        logger.info(f'Entered state "{state}" for shot {shot}')
 
         if state == 'PreShot':
-            logger.info(f'Expecting recording to start in {TIME_DELEY_ARM_PRESHOT} s')
+            logger.info(f'Expecting recording to start in {TIME_DELEY_PRESHOT} s')
+            times['shot_expected'] = t_state_change + datetime.timedelta(seconds=TIME_DELEY_PRESHOT)
     else:
         state = state_prev
         shot = shot_prev
@@ -85,13 +87,15 @@ def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
 
 def start_protection_camera_recording(pixel_coords):
     logger.info(f'{datetime.now()}: Clicking on image and pressing F5 to start recording')
-    ir_automation.click(*PIXEL_COORDS_IMAGE_WINDOW_1)
+    ir_automation.click(*pixel_coords)
     keyboard.press(Key.ctrl)  # Display mouse location 
     keyboard.release(Key.ctrl)
     keyboard.press(Key.f5)
 
 def organise_new_movie_file(PATH_AUTO_EXPORT_PX_TAIL, FN_FORMAT_MOVIE, shot, path_export_px_today):
     i_order_fns, ages_fns, fns_sorted = ir_automation.sort_files_by_age(PATH_AUTO_EXPORT_PX_TAIL)
+    n_files = len(fns_sorted)
+
     saved_shots = ir_automation.shot_nos_from_fns(fns_sorted, pattern=FN_FORMAT_MOVIE.format(shot='(\d+)'))
     if len(fns_sorted) == n_files:
         logger.warning(f'Number of files, {n_files}, has not changed after shot!')
@@ -132,25 +136,20 @@ def automate_ax5_camera_researchir():
 
     times = dict(mod_da_log=None, t_state_change=None)
     loop_cnt = 0
-    n_files = 0
     while True:
-        shot_prev = shot
-        state_prev = state
 
         shot, state, times = update_state_and_shot(FPATH_MSG_LOG, shot, state, times)
         
         t_now = datetime.datetime.now()
-        dt = (t_now - times['PreShot']).seconds if ('PreShot' in times) else 0
-        if dt >= TIME_DELEY_ARM_PRESHOT:
+        dt = (t_now - times['shot_expected']).seconds if ('PreShot' in times) else 0
+
+        if dt <= TIME_RECORD_PRE_SHOT:
 
             start_protection_camera_recording(PIXEL_COORDS_IMAGE_WINDOW_1)
 
             time.sleep(TIME_DURATION_RECORD+5)                    
 
             organise_new_movie_file(PATH_AUTO_EXPORT_PX_TAIL, FN_FORMAT_MOVIE, shot, path_export_px_today)
-
-        if state == 'Abort':
-            logger.info(f'Entered state "{state}" for shot {shot}')
 
         if t_now.time() > STOP_TIME:
             if AUTOMATE_DAPROXY:
