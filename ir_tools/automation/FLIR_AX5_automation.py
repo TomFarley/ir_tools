@@ -86,21 +86,20 @@ def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
     return shot, state, times
 
 def start_protection_camera_recording(pixel_coords):
-    logger.info(f'{datetime.now()}: Clicking on image and pressing F5 to start recording')
+    logger.info(f'Clicking on image and pressing F5 to start recording')
     ir_automation.click(*pixel_coords)
     keyboard.press(Key.ctrl)  # Display mouse location 
     keyboard.release(Key.ctrl)
     keyboard.press(Key.f5)
 
-def organise_new_movie_file(PATH_AUTO_EXPORT_PX_TAIL, FN_FORMAT_MOVIE, shot, path_export_px_today):
+def organise_new_movie_file(PATH_AUTO_EXPORT_PX_TAIL, FN_FORMAT_MOVIE, shot, path_export_px_today, n_file_prev):
     i_order_fns, ages_fns, fns_sorted = ir_automation.sort_files_by_age(PATH_AUTO_EXPORT_PX_TAIL)
     n_files = len(fns_sorted)
 
     saved_shots = ir_automation.shot_nos_from_fns(fns_sorted, pattern=FN_FORMAT_MOVIE.format(shot='(\d+)'))
-    if len(fns_sorted) == n_files:
+    if n_files == n_file_prev:
         logger.warning(f'Number of files, {n_files}, has not changed after shot!')
 
-    n_files = len(fns_sorted)
     if n_files > 0:
         fn_new, age_fn_new, shot_fn_new = Path(fns_sorted[0]), ages_fns[0], saved_shots[0]
         logger.info(f'File "{fn_new}" for shot {shot_fn_new} ({shot} expected) saved {age_fn_new:0.1f} s ago')
@@ -117,6 +116,7 @@ def organise_new_movie_file(PATH_AUTO_EXPORT_PX_TAIL, FN_FORMAT_MOVIE, shot, pat
         dest = path_export_px_today.with_name(fn_new.name)
         dest.write_bytes(fn_new.read_bytes())  # for binary files
         logger.info(f'Wrote new movie file to {dest}')
+    return n_files
 
 def automate_ax5_camera_researchir():
     if AUTOMATE_DAPROXY:
@@ -136,6 +136,7 @@ def automate_ax5_camera_researchir():
 
     times = dict(mod_da_log=None, t_state_change=None)
     loop_cnt = 0
+    n_files = 0
     while True:
 
         shot, state, times = update_state_and_shot(FPATH_MSG_LOG, shot, state, times)
@@ -149,7 +150,7 @@ def automate_ax5_camera_researchir():
 
             time.sleep(TIME_DURATION_RECORD+5)                    
 
-            organise_new_movie_file(PATH_AUTO_EXPORT_PX_TAIL, FN_FORMAT_MOVIE, shot, path_export_px_today)
+            n_files = organise_new_movie_file(PATH_AUTO_EXPORT_PX_TAIL, FN_FORMAT_MOVIE, shot, path_export_px_today, n_file_prev=n_files)
 
         if t_now.time() > STOP_TIME:
             if AUTOMATE_DAPROXY:
