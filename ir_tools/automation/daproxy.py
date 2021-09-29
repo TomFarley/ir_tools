@@ -148,6 +148,20 @@ def daproxy_control():
         loop_cnt += 1
         time.sleep(REFRESH_TIME_MAIN_LOOP)
 
+def update_estimated_shot_time(state, time_entered_state, shot_time_estimate_prev=None):
+    """Improve estimated time shot will run based on typical times states are entered"""
+    delays = {
+        'Ready': 110,  # ~1min 50s before shot
+        'PreShot': 105,  # PreShot comes ~1min 45s before shot
+        'Trigger': 15,  # ~15 s before shot
+        'Abort': -30,  # Effectively after shot
+    }
+    delay = delays.get(state, None)
+    if delay is not None:
+        shot_time_estimate = time_entered_state + datetime.timedelta(seconds=delay)
+    else:
+        shot_time_estimate = shot_time_estimate_prev
+    return shot_time_estimate, delay        
 
 def get_state(fn , logger=None):
     """ get current MAST-U state from MSG_LOG """
@@ -156,9 +170,9 @@ def get_state(fn , logger=None):
         '2': 'Exit',
         '3': 'Idle',
         '4': 'Run',
-        '5': 'Ready',
-        '6': 'PreShot',  # PreShot comes ~2min before shot
-        '8': 'Trigger',
+        '5': 'Ready',  # ~1min 50s before shot
+        '6': 'PreShot',  # PreShot comes ~1min 45s before shot
+        '8': 'Trigger',  # ~15 s before shot
         '9': 'PostShot',
         '10': 'Reset',
         '11': 'Abort',

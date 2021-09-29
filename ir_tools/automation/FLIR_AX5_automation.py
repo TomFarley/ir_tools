@@ -28,9 +28,10 @@ AUTOMATE_DAPROXY = True
 
 FPATH_LOG = Path('protection.log')
 TIME_REFRESH_MAIN_LOOP = 5  # sec. The MAST-U Abort state seems to only last for ~10s
-TIME_DELEY_PRESHOT = 120  # sec. PreShot comes ~2min before shot
+TIME_DELEY_PRESHOT = 105  # sec. PreShot comes ~2min before shot
 TIME_RECORD_PRE_SHOT = 10  # sec. How long before shot is expected to start recording
-TIME_DURATION_RECORD = 15  # sec. Duration of movie recording set in ResearchIR
+TIME_DURATION_RECORD = 25  # sec. Duration of movie recording set in ResearchIR
+TIME_DELAY_REARM = 120  # sec. Time to wait for clock train to finish.
 TIME_TYPICAL_MIN_INTERSHOT = 3 * 60  # sec. Normally at least 3 min between shots
 UPDATE_REMOTE_LOG_EVERY = 50  # loops. No point in updating this too often as Github pages site lag by ~20 min
 STOP_TIME = datetime.time(20, 10)
@@ -39,7 +40,7 @@ PIXEL_COORDS_IMAGE_WINDOW_1 = (1465, 155)  # Click image to make window active f
 BARS = '='*10
 
 date = datetime.datetime.now().strftime('%Y-%m-%d')
-path_export_px_today = PATH_AUTO_EXPORT_PX_TAIL / '..' / date
+path_export_px_today = (PATH_AUTO_EXPORT_PX_TAIL / '..' / date).resolve()
 
 logger = logging.getLogger(__name__)
 # logger.propagate = False
@@ -65,7 +66,7 @@ def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
     modified_da_log, t_mod_da_log = ir_automation.file_updated(FPATH_MSG_LOG, t_mod_prev=times['mod_da_log'])
     times['mod_da_log'] = t_mod_da_log
     if modified_da_log:
-        shot, state = get_shot(fn=FPATH_MSG_LOG, logger=logger), get_state(fn=FPATH_MSG_LOG, logger=logger)
+        shot, state = get_shot(fn=FPATH_MSG_LOG), get_state(fn=FPATH_MSG_LOG)
         t_state_change = datetime.datetime.now()
         times['state_change'] = t_state_change
         times[state] = t_state_change
@@ -76,9 +77,12 @@ def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
         # if state in ('Ready', 'PreShot', 'Trigger', 'Abort'):
         logger.info(f'Entered state "{state}" for shot {shot}')
 
-        if state == 'PreShot':
-            logger.info(f'Expecting recording to start in {TIME_DELEY_PRESHOT} s')
-            times['shot_expected'] = t_state_change + datetime.timedelta(seconds=TIME_DELEY_PRESHOT)
+        shot_time_estimate, delay = daproxy.update_estimated_shot_time(state, t_state_change, times.get('shot_expected'))
+        times['shot_expected'] = shot_time_estimate
+
+        if shot_time_estimate is not None:
+            times['finish_recording'] = times['shot_expected'] + datetime.timedelta(seconds=TIME_DURATION_RECORD+2)
+            times['re-arm'] = times['shot_expected'] + datetime.timedelta(seconds=TIME_DELAY_REARM)
     else:
         state = state_prev
         shot = shot_prev
@@ -103,23 +107,30 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
 
     if n_files > 0:
         fn_new, age_fn_new, shot_fn_new = Path(fns_sorted[0]), ages_fns[0], saved_shots[0]
+        path_fn_new = path_auto_export / fn_new
         logger.info(f'File "{fn_new}" for shot {shot_fn_new} ({shot} expected) saved {age_fn_new:0.1f} s ago')
         if (shot_fn_new != shot) and (age_fn_new < TIME_TYPICAL_MIN_INTERSHOT):
-            if shot_fn_new != shot:
-                fn_expected = path_auto_export / fn_format_movie.format(shot=shot)
-                if not fn_expected.is_file():
-                    logger.info(f'Renaming latest file from "{fn_new.name}" to "{fn_expected.name}"')
-                    (path_auto_export / fn_new).rename(fn_expected)
-                    fn_new = fn_expected
-                else:
-                    logger.warning(f'Expected shot no file already exists: {fn_expected}. '
-                                   f'Not sure how to rename {fn_new}\nPulses saved: {saved_pulses}')
-        dest = path_export_today.with_name(fn_new.name)
-        dest.write_bytes(fn_new.read_bytes())  # for binary files
-        logger.info(f'Wrote new movie file to {dest}')
+            fn_expected = fn_format_movie.format(shot=f'0{shot}')
+            path_fn_expected = path_auto_export / fn_expected
+            if not path_fn_expected.is_file():
+                logger.info(f'Renaming latest file from "{path_fn_new.name}" to "{path_fn_expected.name}"')
+                path_fn_new.rename(path_fn_expected)
+                path_fn_new = path_fn_expected
+                if not path_fn_expected.is_file():
+                    logger.warning(f'File rename failed')
+            else:
+                logger.warning(f'Expected shot no file already exists: {path_fn_expected.name}. '
+                               f'Not sure how to rename {fn_new}\nPulses saved: {saved_pulses}')
+        if path_fn_new.is_file():
+            dest = path_export_today / path_fn_new.name
+            dest.write_bytes(path_fn_new.read_bytes())  # for binary files
+            logger.info(f'Wrote new movie file to {dest}')
+        else:
+            logger.warning(f'New file does not exist: {path_fn_new}')
     return n_files
 
 def automate_ax5_camera_researchir():
+    logger.info('Starting camera automation')
     if AUTOMATE_DAPROXY:
         proc_da_proxy = daproxy.run_da_proxy(FPATH_DA_PROXY)
     else:
@@ -138,19 +149,31 @@ def automate_ax5_camera_researchir():
     times = dict(mod_da_log=None, t_state_change=None)
     loop_cnt = 0
     n_files = 0
+    recording = False
+
     while True:
 
         shot, state, times = update_state_and_shot(FPATH_MSG_LOG, shot, state, times)
         
         t_now = datetime.datetime.now()
-        dt = (t_now - times['shot_expected']).seconds if ('PreShot' in times) else 0
+        # print(f'times: {times}')
+        # print(f't_now: {t_now}')
+        # logger.info(f't_shot_expected: {times.get("shot_expected")}')
+        dt = (times['shot_expected'] - t_now).total_seconds() if ('PreShot' in times) else None
 
-        if dt <= TIME_RECORD_PRE_SHOT:
+        if (dt is not None) and (dt >= 0):
+            logger.info(f'Shot expected in dt: {dt} s')
+            if (dt <= TIME_RECORD_PRE_SHOT) and (not recording):
+                start_protection_camera_recording(PIXEL_COORDS_IMAGE_WINDOW_1)
+                recording = True
+                # time.sleep(TIME_DURATION_RECORD+5)                    
+    
+            dt = (times['finish_recording'] - t_now).total_seconds() if ('PreShot' in times) else None
+            if (dt is not None) and (dt >= 0):
+                logger.info(f'Recording should finish in dt: {dt} s')
 
-            start_protection_camera_recording(PIXEL_COORDS_IMAGE_WINDOW_1)
-
-            time.sleep(TIME_DURATION_RECORD+5)                    
-
+        if (dt is not None) and (dt <= 0) and (recording):
+            recording = False
             n_files = organise_new_movie_file(PATH_AUTO_EXPORT_PX_TAIL, FN_FORMAT_MOVIE, shot, path_export_px_today, n_file_prev=n_files)
 
         if t_now.time() > STOP_TIME:

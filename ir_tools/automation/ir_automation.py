@@ -81,7 +81,8 @@ def check_freia_access():
         logger.info('freia access: ' + NO)
 
 def file_updated(path_fn, t_mod_prev=None):
-    t_mod = os.stat(path_fn).st_mtime
+    t_mod = Path(path_fn).stat().st_mtime
+    t_mod = datetime.fromtimestamp(t_mod)
     if (t_mod != t_mod_prev) or (t_mod_prev is None):
         modified = True
     else:
