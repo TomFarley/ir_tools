@@ -4,6 +4,8 @@
 Using daproxy technique from MWI:
 https://git.ccfe.ac.uk/multi_wavelength_imaging/hardware_interface_code/-/blob/main/run.py
 
+To set up daproxy, just copy mastda directory and set upx address and server name in config file
+
 Created: 
 """
 

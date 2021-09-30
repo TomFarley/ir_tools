@@ -20,19 +20,21 @@ from ir_tools.automation import ir_automation, daproxy
 from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot, get_state
 from ir_tools.automation.ir_automation import make_iterable
 
-PATHS_AUTO_EXPORT = {'MWIR': Path('D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export\\'),
+PATHS_AUTO_EXPORT = {'LWIR1': Path('D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export\\'),
+                     'MWIR1': Path('D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export\\'),
                      'Px_coil_tail': Path('D:\\FLIR_AX5_Protection_data\\PX Coil Tail\\auto_export\\'),
                      'SW_beam_dump': Path('D:\\FLIR_AX5_Protection_data\\SW_beam_dump\\auto_export\\')}
 PATH_T_DRIVE = Path(f'T:\\tfarley\\RIR\\')
 PATH_FREIA = Path('H:\\data\\movies\\diagnostic_pc_transfer\\rir\\')
 
-FNS_FORMAT_MOVIE = {'MWIR': '{shot}.ats',
+FNS_FORMAT_MOVIE = {'LWIR1': '{shot}.RAW',
+                    'MWIR1': '{shot}.ats',
                     'Px_coil_tail': '{shot}.seq',  # shot=(\d+) for regex match
                     'SW_beam_dump': '{shot}.seq'}
 
 AUTOMATE_DAPROXY = False
 
-FPATH_LOG = Path('MWIR_pc.log')
+FPATH_LOG = Path('MWIR1_pc.log')
 
 TIME_REFRESH_MAIN_LOOP_OPS = 5  # sec. The MAST-U Abort state seems to only last for ~10s
 TIME_REFRESH_MAIN_LOOP_NON_OPS = 10*60  # sec. The MAST-U Abort state seems to only last for ~10s
@@ -46,9 +48,10 @@ STOP_TIME = datetime.time(20, 10)
 START_TIME = datetime.time(7, 50)
 PIXEL_COORDS_RECORD_WINDOW_1 = (1465, 55)  # Red record button (needs to be active)
 PIXEL_COORDS_IMAGE_WINDOW_1 = (1465, 155)  # Click image to make window active for F5 record
-PIXEL_COORDS_IMAGE = {'MWIR': (360, 155),  # Top left window, record button at (360, 55)
-                      'Px_protection': (1465, 155),  # Click image to make window active for F5 record
-                      'SW_beam_dump': (1465, 955)}
+PIXEL_COORDS_IMAGE = {'LWIR1': (580, 766),  # Record button
+                      'MWIR1': (360, 155),  # Top left window, record button at (360, 55)
+                      'Px_protection': (1465, 155),  # Top right window
+                      'SW_beam_dump': (1465, 955)}  # Bottom right window
 BARS = '='*10
 
 logger = logging.getLogger(__name__)
@@ -122,8 +125,8 @@ def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
 
     return shot, state, times, updated
 
-def start_recording_research_ir(pixel_coords):
-    logger.info(f'Clicking on image and pressing F5 to start recording')
+def start_recording_research_ir(pixel_coords, camera):
+    logger.info(f'Clicking on image and pressing F5 to start recording for "{camera}" camera')
     ir_automation.click(*pixel_coords)
     keyboard.press(Key.ctrl)  # Display mouse location 
     keyboard.release(Key.ctrl)
@@ -180,7 +183,7 @@ def automate_ax5_camera_researchir():
     logger.info(f'{BARS} Ready for shot {shot+1} in state "{state}" {BARS}')
 
     # TODO: Set with argpass?
-    active_cameras = {'MWIR': True, 'Px_protection': True, 'SW_beam_dump': False}
+    active_cameras = {'LWIR': False, 'MWIR1': True, 'Px_protection': True, 'SW_beam_dump': False}
 
     auto_export_paths = {}
     for camera, active in active_cameras.items():
@@ -239,14 +242,17 @@ def automate_ax5_camera_researchir():
             if (dt_shot <= TIME_RECORD_PRE_SHOT) and (not recording):
                 # Start recording protection views
                 if active_cameras['Px_protection']:
-                    start_recording_research_ir(PIXEL_COORDS_IMAGE['Px_protection'])
+                    start_recording_research_ir(PIXEL_COORDS_IMAGE['Px_protection'], 'Px_protection')
                 if active_cameras['SW_beam_dump']:
-                    start_recording_research_ir(PIXEL_COORDS_IMAGE['SW_beam_dump'])
+                    start_recording_research_ir(PIXEL_COORDS_IMAGE['SW_beam_dump'], 'SW_beam_dump')
                 recording = True
 
-            elif active_cameras['MWIR']:
-                # Make sure MWIR is armed (should already be after last shot)
-                start_recording_research_ir(PIXEL_COORDS_IMAGE['MWIR'])
+            else:
+                if active_cameras['MWIR1']:
+                    # Make sure MWIR1 is armed (should already be after last shot)
+                    start_recording_research_ir(PIXEL_COORDS_IMAGE['MWIR1'], camera='MWIR1')
+                if active_cameras['LWIR1']:
+                    raise NotImplementedError
     
             if (dt_recording_finished >= 0):
                 logger.info(f'Recording should finish in dt: {dt} s')
@@ -261,8 +267,12 @@ def automate_ax5_camera_researchir():
                                                     path_export_today=paths_today[camera], n_file_prev=n_files[camera])
 
         if (dt_re_arm <= 0):
-            if active_cameras['MWIR']:
-                start_recording_research_ir(PIXEL_COORDS_IMAGE['MWIR'])
+            if active_cameras['MWIR1']:
+                logger.info('Re-arming MWIR1')
+                start_recording_research_ir(PIXEL_COORDS_IMAGE['MWIR1'], camera='MWIR1')
+            if active_cameras['LWIR1']:
+                logger.info('Re-arming LWIR1')
+                raise NotImplementedError
 
 
 
