@@ -97,10 +97,9 @@ def sigint_handler(proc_da_proxy):
     return _sigint_handler
 
 def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
-    modified_da_log, t_mod_da_log = ir_automation.file_updated(FPATH_MSG_LOG, t_mod_prev=times['state_change'])
+    modified_da_log, t_state_change = ir_automation.file_updated(FPATH_MSG_LOG, t_mod_prev=times['state_change'])
     if modified_da_log:
         shot, state = get_shot(fn=FPATH_MSG_LOG), get_state(fn=FPATH_MSG_LOG)
-        t_state_change = datetime.datetime.now()
         times['state_change'] = t_state_change
         times[state] = t_state_change
 
