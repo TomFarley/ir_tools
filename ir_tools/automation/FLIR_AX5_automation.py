@@ -6,7 +6,7 @@
 Created: 
 """
 
-import logging, signal, time, datetime
+import logging, signal, time, datetime, os
 from typing import Union, Iterable, Sequence, Tuple, Optional, Any, Dict
 from pathlib import Path
 
@@ -22,7 +22,7 @@ from ir_tools.automation.ir_automation import make_iterable
 
 PATHS_AUTO_EXPORT = {'LWIR1': Path('D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export\\'),
                      'MWIR1': Path('D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export\\'),
-                     'Px_coil_tail': Path('D:\\FLIR_AX5_Protection_data\\PX Coil Tail\\auto_export\\'),
+                     'Px_protection': Path('D:\\FLIR_AX5_Protection_data\\PX Coil Tail\\auto_export\\'),
                      'SW_beam_dump': Path('D:\\FLIR_AX5_Protection_data\\SW_beam_dump\\auto_export\\')}
 PATH_T_DRIVE = Path(f'T:\\tfarley\\RIR\\')
 PATH_FREIA = Path('H:\\data\\movies\\diagnostic_pc_transfer\\rir\\')
@@ -166,7 +166,15 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
     return n_files
 
 def automate_ax5_camera_researchir():
-    logger.info('Starting camera automation')
+    host = os.environ['COMPUTERNAME']
+    # TODO: Set with argpass?
+    if host == 'MWIR-PC1':
+        active_cameras = {'LWIR1': False, 'MWIR1': True, 'Px_protection': True, 'SW_beam_dump': False}
+    else:
+        active_cameras = {'LWIR1': True, 'MWIR1': False, 'Px_protection': False, 'SW_beam_dump': False}
+
+    logger.info(f'Starting camera automation on {host} PC for cameras: {", ".join([camera for camera, active in active_cameras.items() if active])}')
+    
     if AUTOMATE_DAPROXY:
         proc_da_proxy = daproxy.run_da_proxy(FPATH_DA_PROXY)
     else:
@@ -179,11 +187,8 @@ def automate_ax5_camera_researchir():
     else:
         raise FileNotFoundError(f'DAProxy log file doesn not exist: {FPATH_MSG_LOG}')
 
-    shot, state = get_shot(fn=FPATH_MSG_LOG, logger=logger), get_state(fn=FPATH_MSG_LOG, logger=logger)
+    shot, state = get_shot(fn=FPATH_MSG_LOG), get_state(fn=FPATH_MSG_LOG)
     logger.info(f'{BARS} Ready for shot {shot+1} in state "{state}" {BARS}')
-
-    # TODO: Set with argpass?
-    active_cameras = {'LWIR': False, 'MWIR1': True, 'Px_protection': True, 'SW_beam_dump': False}
 
     auto_export_paths = {}
     for camera, active in active_cameras.items():
@@ -237,7 +242,7 @@ def automate_ax5_camera_researchir():
 
 
         if (dt_shot >= 0):
-            logger.info(f'Shot expected in dt: {dt_shot} s')
+            logger.info(f'Shot expected in dt: {dt_shot:0.1f} s')
 
             if (dt_shot <= TIME_RECORD_PRE_SHOT) and (not recording):
                 # Start recording protection views
@@ -255,25 +260,12 @@ def automate_ax5_camera_researchir():
                     raise NotImplementedError
     
             if (dt_recording_finished >= 0):
-                logger.info(f'Recording should finish in dt: {dt} s')
+                logger.info(f'Recording should finish in dt: {dt_recording_finished} s')
 
 
         if (dt_recording_finished <= 0) and (recording):
             # Protection recordings complete, rename files and organise into todays date folders
             recording = False
-<<<<<<< HEAD
-            n_files = organise_new_movie_file(PATH_AUTO_EXPORT_PX_TAIL, FN_FORMAT_MOVIE, shot, path_export_px_today, n_file_prev=n_files)
-
-        if t_now.time() > STOP_TIME:
-            ops_hours = False
-            if AUTOMATE_DAPROXY:
-                daproxy.kill_da_proxy(proc_da_proxy)
-            # logger.info('>>> GOODNIGHT <<<')
-            # break
-        elif loop_cnt % UPDATE_REMOTE_LOG_EVERY == 0:
-            pass
-            # update_remote_log(logger=logger)
-=======
             for camera, active in active_cameras.items():
                 if active:
                     n_files[camera] = organise_new_movie_file(PATHS_AUTO_EXPORT[camera], FNS_FORMAT_MOVIE[camera], shot,
@@ -286,8 +278,6 @@ def automate_ax5_camera_researchir():
             if active_cameras['LWIR1']:
                 logger.info('Re-arming LWIR1')
                 raise NotImplementedError
-
->>>>>>> 81650f2ab5ce4fce8da36ab61d30df322a0fb975
 
 
 if __name__ == '__main__':
