@@ -247,13 +247,18 @@ def shot_nos_from_fns(file_names, pattern='(\d+).ats'):
 
 def mkdir(path, parents=True):
     path = Path(path)
+    success = True
+    created = False
     if (not path.is_dir()):
         try:
             path.mkdir(exist_ok=True, parents=parents)
         except FileExistsError as e:
             print(f'Failed to create directory "{path}": {e}')
+            succes = False
         else:
             print(f'Created new directory "{path}"')
+            created = True
+    return success, created
 
 def copy_files(path_from, path_to, append_from_name=False, create_destination=True):
     if append_from_name:
