@@ -117,13 +117,15 @@ def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
         if shot_time_estimate is not None:
             times['finish_recording'] = times['shot_expected'] + datetime.timedelta(seconds=TIME_DURATION_RECORD+2)
             times['re-arm'] = times['shot_expected'] + datetime.timedelta(seconds=TIME_DELAY_REARM)
-        updated = True
+        state_updated = True
+        shot_updated = True if (shot != shot_prev) else False
     else:
         state = state_prev
         shot = shot_prev
-        updated = False
+        state_updated = False
+        shot_updated = False
 
-    return shot, state, times, updated
+    return shot, state, times, shot_updated, state_updated
 
 def start_recording_research_ir(pixel_coords, camera):
     logger.info(f'Clicking on image and pressing F5 to start recording for "{camera}" camera')
@@ -198,17 +200,18 @@ def automate_ax5_camera_researchir():
     date_str, paths_today = check_date(auto_export_paths=auto_export_paths)
 
     times = dict(mod_da_log=None, t_state_change=None, shot_expected=None)
-    loop_cnt = 0
     n_files = {camera: 0 for camera, active in active_cameras.items() if active}
     recording = False
     ops_hours = True
+    shot_recorded_last = None
+    loop_cnt = 0
 
     while True:
         loop_cnt += 1
         t_now = datetime.datetime.now()
-        shot, state, times, log_updated = update_state_and_shot(FPATH_MSG_LOG, shot, state, times)
+        shot, state, times, shot_updated, state_updafted = update_state_and_shot(FPATH_MSG_LOG, shot, state, times)
 
-        if ((t_now.time() > START_TIME) and (t_now.time() < STOP_TIME)) or log_updated:
+        if ((t_now.time() > START_TIME) and (t_now.time() < STOP_TIME)) or state_updafted:
             time.sleep(TIME_REFRESH_MAIN_LOOP_OPS)
 
             if not ops_hours:
@@ -228,6 +231,9 @@ def automate_ax5_camera_researchir():
             continue
 
             # update_remote_log(logger=logger)
+
+        if (shot_updated) and (shot_recorded_last != shot-1):
+            logger.warning(f'A shot has been missed! Last recorded shot was {shot_recorded_last}')
 
         dt_shot = (times['shot_expected'] - t_now).total_seconds() if (times['shot_expected'] is not None) else None
         if dt_shot is None:
@@ -266,6 +272,7 @@ def automate_ax5_camera_researchir():
         if (dt_recording_finished <= 0) and (recording):
             # Protection recordings complete, rename files and organise into todays date folders
             recording = False
+            shot_recorded_last = shot
             for camera, active in active_cameras.items():
                 if active:
                     n_files[camera] = organise_new_movie_file(PATHS_AUTO_EXPORT[camera], FNS_FORMAT_MOVIE[camera], shot,
