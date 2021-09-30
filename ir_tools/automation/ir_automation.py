@@ -239,7 +239,7 @@ def sort_files_by_age(fns, path=None):
         t_modified, age_dt = age_of_file(fn, path=path)
         t_mods.append(t_modified)
         ages_dt.append(age_dt)
-        ages_seconds.append(ages_dt.total_seconds())
+        ages_seconds.append(age_dt.total_seconds())
 
     i_order = np.argsort(ages_seconds)
     t_mod_sorted = np.array(t_mods)[i_order]

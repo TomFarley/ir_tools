@@ -149,6 +149,8 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
         fn_new, age_fn_new, shot_fn_new = Path(fns_sorted[0]), ages[0], saved_shots[0]
         path_fn_new = path_auto_export / fn_new
         logger.info(f'File "{fn_new}" for shot {shot_fn_new} ({shot} expected) saved {age_fn_new:0.1f} s ago')
+
+        # TODO: Compare time of shot change to time of file creation
         if (shot_fn_new != shot) and (age_fn_new < TIME_TYPICAL_MIN_INTERSHOT):
             fn_expected = fn_format_movie.format(shot=f'0{shot}')
             path_fn_expected = path_auto_export / fn_expected
@@ -202,6 +204,7 @@ def automate_ax5_camera_researchir():
     date_str, paths_today = check_date(auto_export_paths=auto_export_paths)
 
     times = dict(state_change=None, shot_change=None, shot_expected=None)
+    armed = {}
     n_files = {camera: 0 for camera, active in active_cameras.items() if active}
     recording = False
     ops_hours = True
@@ -261,9 +264,11 @@ def automate_ax5_camera_researchir():
                 recording = True
 
             else:
-                if active_cameras['MWIR1']:
+                camera = 'MWIR1'
+                if active_cameras[camera] and not armed.get(camera, False):
                     # Make sure MWIR1 is armed (should already be after last shot)
-                    start_recording_research_ir(PIXEL_COORDS_IMAGE['MWIR1'], camera='MWIR1')
+                    start_recording_research_ir(PIXEL_COORDS_IMAGE[camera], camera=camera)
+                    armed[camera] = True
                 if active_cameras['LWIR1']:
                     raise NotImplementedError
     
@@ -280,6 +285,7 @@ def automate_ax5_camera_researchir():
                     n_files[camera] = organise_new_movie_file(PATHS_AUTO_EXPORT[camera], FNS_FORMAT_MOVIE[camera], shot,
                                                     path_export_today=paths_today[camera], n_file_prev=n_files[camera],
                                                     t_shot_change=times['shot_change'])
+                    armed[camera] = False
 
         if (dt_re_arm <= 0):
             if active_cameras['MWIR1']:
