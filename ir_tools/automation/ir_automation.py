@@ -236,7 +236,7 @@ def sort_files_by_age(fns, path=None):
     ages_dt = []
     ages_seconds = []
     for fn in fns:
-        t_modified, age_dt = age_of_file(fn, path=path)[1]
+        t_modified, age_dt = age_of_file(fn, path=path)
         t_mods.append(t_modified)
         ages_dt.append(age_dt)
         ages_seconds.append(ages_dt.total_seconds())
