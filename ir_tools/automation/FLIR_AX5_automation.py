@@ -29,7 +29,7 @@ PATH_FREIA = Path('H:\\data\\movies\\diagnostic_pc_transfer\\rir\\')
 
 FNS_FORMAT_MOVIE = {'LWIR1': '{shot}.RAW',
                     'MWIR1': '{shot}.ats',
-                    'Px_coil_tail': '{shot}.seq',  # shot=(\d+) for regex match
+                    'Px_protection': '{shot}.seq',  # shot=(\d+) for regex match
                     'SW_beam_dump': '{shot}.seq'}
 
 AUTOMATE_DAPROXY = False
@@ -118,7 +118,11 @@ def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
             times['finish_recording'] = times['shot_expected'] + datetime.timedelta(seconds=TIME_DURATION_RECORD+2)
             times['re-arm'] = times['shot_expected'] + datetime.timedelta(seconds=TIME_DELAY_REARM)
         state_updated = True
-        shot_updated = True if (shot != shot_prev) else False
+        if (shot != shot_prev):
+            shot_updated = True
+            times['shot_change'] = t_state_change
+        else:
+            shot_updated = False
     else:
         state = state_prev
         shot = shot_prev
@@ -134,9 +138,9 @@ def start_recording_research_ir(pixel_coords, camera):
     keyboard.release(Key.ctrl)
     keyboard.press(Key.f5)
 
-def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export_today, n_file_prev):
+def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export_today, n_file_prev, t_shot_change):
     fns_autosaved = ir_automation.filenames_in_dir(path_auto_export)
-    i_order_fns, ages_fns, fns_sorted = ir_automation.sort_files_by_age(fns_autosaved, path=path_auto_export)
+    fns_sorted, i_order, t_mod, ages, ages_sec = ir_automation.sort_files_by_age(fns_autosaved, path=path_auto_export)
     n_files = len(fns_sorted)
 
     saved_shots = ir_automation.shot_nos_from_fns(fns_sorted, pattern=fn_format_movie.format(shot='(\d+)'))
@@ -144,7 +148,7 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
         logger.warning(f'Number of files, {n_files}, has not changed after shot!')
 
     if n_files > 0:
-        fn_new, age_fn_new, shot_fn_new = Path(fns_sorted[0]), ages_fns[0], saved_shots[0]
+        fn_new, age_fn_new, shot_fn_new = Path(fns_sorted[0]), ages[0], saved_shots[0]
         path_fn_new = path_auto_export / fn_new
         logger.info(f'File "{fn_new}" for shot {shot_fn_new} ({shot} expected) saved {age_fn_new:0.1f} s ago')
         if (shot_fn_new != shot) and (age_fn_new < TIME_TYPICAL_MIN_INTERSHOT):
@@ -199,7 +203,7 @@ def automate_ax5_camera_researchir():
 
     date_str, paths_today = check_date(auto_export_paths=auto_export_paths)
 
-    times = dict(mod_da_log=None, t_state_change=None, shot_expected=None)
+    times = dict(state_change=None, shot_change=None, shot_expected=None)
     n_files = {camera: 0 for camera, active in active_cameras.items() if active}
     recording = False
     ops_hours = True
@@ -276,7 +280,8 @@ def automate_ax5_camera_researchir():
             for camera, active in active_cameras.items():
                 if active:
                     n_files[camera] = organise_new_movie_file(PATHS_AUTO_EXPORT[camera], FNS_FORMAT_MOVIE[camera], shot,
-                                                    path_export_today=paths_today[camera], n_file_prev=n_files[camera])
+                                                    path_export_today=paths_today[camera], n_file_prev=n_files[camera],
+                                                    t_shot_change=times['shot_change'])
 
         if (dt_re_arm <= 0):
             if active_cameras['MWIR1']:

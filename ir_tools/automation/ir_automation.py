@@ -223,18 +223,31 @@ def filenames_in_dir(path):
 def age_of_file(fn_path, path=None):
     if path is not None:
         fn_path = Path(path) / fn_path
-    t_now = time.time()
-    t_day = 24*60*60
-    t_age = t_now-os.path.getmtime(fn_path)
-    return t_age
+    t_now = datetime.now()
+    # t_day = 24*60*60
+    t_modified = datetime.fromtimestamp(os.path.getmtime(fn_path))
+    dt_age = t_now - t_modified
+    return t_modified, dt_age
 
 def sort_files_by_age(fns, path=None):
     fns = make_iterable(fns)
-    ages = np.array([age_of_file(fn, path=path) for fn in fns])
-    i_order = np.argsort(ages)
+
+    t_mods = []
+    ages_dt = []
+    ages_seconds = []
+    for fn in fns:
+        t_modified, age_dt = age_of_file(fn, path=path)[1]
+        t_mods.append(t_modified)
+        ages_dt.append(age_dt)
+        ages_seconds.append(ages_dt.total_seconds())
+
+    i_order = np.argsort(ages_seconds)
+    t_mod_sorted = np.array(t_mods)[i_order]
     fns_sorted = np.array(fns)[i_order]
-    ages_sorted = ages[i_order]
-    return i_order, ages_sorted, fns_sorted
+    ages_sorted = ages_dt[i_order]
+    ages_sec_sorted = ages_seconds[i_order]
+
+    return fns_sorted, i_order, t_mod_sorted, ages_sorted, ages_sec_sorted
 
 def shot_nos_from_fns(file_names, pattern='(\d+).ats'):
     saved_pulses = []
