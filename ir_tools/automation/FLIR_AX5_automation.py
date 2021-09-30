@@ -177,10 +177,11 @@ def automate_ax5_camera_researchir():
             n_files = organise_new_movie_file(PATH_AUTO_EXPORT_PX_TAIL, FN_FORMAT_MOVIE, shot, path_export_px_today, n_file_prev=n_files)
 
         if t_now.time() > STOP_TIME:
+            ops_hours = False
             if AUTOMATE_DAPROXY:
                 daproxy.kill_da_proxy(proc_da_proxy)
-            logger.info('>>> GOODNIGHT <<<')
-            break
+            # logger.info('>>> GOODNIGHT <<<')
+            # break
         elif loop_cnt % UPDATE_REMOTE_LOG_EVERY == 0:
             pass
             # update_remote_log(logger=logger)
