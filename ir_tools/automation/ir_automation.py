@@ -244,8 +244,8 @@ def sort_files_by_age(fns, path=None):
     i_order = np.argsort(ages_seconds)
     t_mod_sorted = np.array(t_mods)[i_order]
     fns_sorted = np.array(fns)[i_order]
-    ages_sorted = ages_dt[i_order]
-    ages_sec_sorted = ages_seconds[i_order]
+    ages_sorted = np.array(ages_dt)[i_order]
+    ages_sec_sorted = np.array(ages_seconds)[i_order]
 
     return fns_sorted, i_order, t_mod_sorted, ages_sorted, ages_sec_sorted
 
@@ -316,6 +316,19 @@ def delete_files_in_dir(path, glob='*'):
             file.unlink()
     print(f'Deleted files {deleted_files} in {path}')
 
+def move_file_in_dir(path_from, path_to):
+    if not path_to.is_dir():
+        path_to.mkdir()
+        print(f'Created new directory {path_to}')
+
+    fns = filenames_in_dir(path_from)
+    for fn in fns:
+        path_fn = Path(path_from) / fn
+        path_fn_new = Path(parh_to) / fn
+        path_fn.replace(path_fn_new)
+    logger.info(f'Moved files from "{path_from}" to "{path_to}": {fns}')
+    time.sleep(0.5)
+    return fns
 
 def read_shot_number(fn_shot):
     fn_shot = Path(fn_shot).expanduser().resolve()

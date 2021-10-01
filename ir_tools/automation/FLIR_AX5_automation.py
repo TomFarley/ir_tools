@@ -36,18 +36,19 @@ AUTOMATE_DAPROXY = False
 
 FPATH_LOG = Path('MWIR1_pc.log')
 
-TIME_REFRESH_MAIN_LOOP_OPS = 5  # sec. The MAST-U Abort state seems to only last for ~10s
+TIME_REFRESH_MAIN_LOOP_OPS = 10  # sec. The MAST-U Abort state seems to only last for ~10s
+TIME_REFRESH_MAIN_LOOP_PRESHOT = 1  # sec. The MAST-U Abort state seems to only last for ~10s
 TIME_REFRESH_MAIN_LOOP_NON_OPS = 10*60  # sec. The MAST-U Abort state seems to only last for ~10s
 TIME_DELEY_PRESHOT = 105  # sec. PreShot comes ~2min before shot
-TIME_RECORD_PRE_SHOT = 10  # sec. How long before shot is expected to start recording
+TIME_RECORD_PRE_SHOT = 6  # sec. How long before shot is expected to start recording
 TIME_DURATION_RECORD = 25  # sec. Duration of movie recording set in ResearchIR
 TIME_DELAY_REARM = 120  # sec. Time to wait for clock train to finish.
 TIME_TYPICAL_MIN_INTERSHOT = 3 * 60  # sec. Normally at least 3 min between shots
-LOOP_COUNT_UPDATE = 50  # loops. No point in updating this too often as Github pages site lag by ~20 min
+
+LOOP_COUNT_UPDATE = 10  # loops. No point in updating this too often as Github pages site lag by ~20 min
 STOP_TIME = datetime.time(20, 10)
 START_TIME = datetime.time(7, 50)
-PIXEL_COORDS_RECORD_WINDOW_1 = (1465, 55)  # Red record button (needs to be active)
-PIXEL_COORDS_IMAGE_WINDOW_1 = (1465, 155)  # Click image to make window active for F5 record
+
 PIXEL_COORDS_IMAGE = {'LWIR1': (580, 766),  # Record button
                       'MWIR1': (360, 155),  # Top left window, record button at (360, 55)
                       'Px_protection': (1465, 155),  # Top right window
@@ -70,8 +71,9 @@ keyboard = Controller()
 def empty_auto_export(path_auto_export):
     path_auto_export_backup = (path_auto_export / '..' / 'auto_export_backup').resolve()
     ir_automation.mkdir(path_auto_export_backup)
+    ir_automation.move
     ir_automation.copy_files(path_auto_export, path_auto_export_backup)
-    ir_automation.delete_files_in_dir(path_auto_export, glob='*.RAW')
+    ir_automation.delete_files_in_dir(path_auto_export)  # , glob='*.RAW')
     logger.info(f'Moved previously exported files to {path_auto_export_backup} from {path_auto_export}')
 
 def check_date(auto_export_paths):
@@ -81,7 +83,7 @@ def check_date(auto_export_paths):
     if date.weekday() <= 5:
         # No weekend ops
         for camera, path in auto_export_paths.items():
-            path_export_today = (path / '..' / date_str).resolve()
+            path_export_today = (path / '../dates' / date_str).resolve()
             success, created = ir_automation.mkdir(path_export_today)
             paths_today[camera] = path_export_today
             if created:
@@ -105,15 +107,16 @@ def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
 
         if shot != shot_prev:
             logger.info(f'{BARS} Shot number changed to {shot}. State: "{state}" {BARS}')
-
-        # if state in ('Ready', 'PreShot', 'Trigger', 'Abort'):
-        logger.info(f'Entered state "{state}" for shot {shot}')
+        else:
+            # if state in ('Ready', 'PreShot', 'Trigger', 'Abort'):
+            # if state_prev is not None:
+            logger.info(f'In state "{state}" for shot {shot}')
 
         shot_time_estimate, delay = daproxy.update_estimated_shot_time(state, t_state_change, times.get('shot_expected'))
         times['shot_expected'] = shot_time_estimate
 
         if shot_time_estimate is not None:
-            times['finish_recording'] = times['shot_expected'] + datetime.timedelta(seconds=TIME_DURATION_RECORD+2)
+            times['finish_recording'] = times['shot_expected'] + datetime.timedelta(seconds=TIME_DURATION_RECORD-TIME_RECORD_PRE_SHOT)
             times['re-arm'] = times['shot_expected'] + datetime.timedelta(seconds=TIME_DELAY_REARM)
         state_updated = True
         if (shot != shot_prev):
@@ -130,11 +133,27 @@ def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
     return shot, state, times, shot_updated, state_updated
 
 def start_recording_research_ir(pixel_coords, camera):
-    logger.info(f'Clicking on image and pressing F5 to start recording for "{camera}" camera')
-    ir_automation.click(*pixel_coords)
+    logger.info(f'Start recording for "{camera}" camera. Clicking on image {pixel_coords} and pressing F5.')
+    try:
+        ir_automation.click(*pixel_coords)
+    except Exception as e:
+        logger.excetion(f'Failed to start Research IR recording for "{camera}" whith click at {pixel_coords}')
+    keyboard.press(Key.f5)
     keyboard.press(Key.ctrl)  # Display mouse location 
     keyboard.release(Key.ctrl)
-    keyboard.press(Key.f5)
+
+def arm_scientific_cameras(active_cameras, armed):
+    camera = 'MWIR1'
+    if active_cameras[camera] and (not armed.get(camera, False)):
+        logger.info(f'Re-arming {camera}')
+        start_recording_research_ir(PIXEL_COORDS_IMAGE[camera], camera=camera)
+        armed[camera] = True
+    camera = 'LWIR1'
+    if active_cameras[camera] and (not armed.get(camera, False)):
+        logger.info('Re-arming LWIR1')
+        armed[camera] = True
+        raise NotImplementedError
+    return armed
 
 def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export_today, n_file_prev, t_shot_change):
     fns_autosaved = ir_automation.filenames_in_dir(path_auto_export)
@@ -143,30 +162,38 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
 
     saved_shots = ir_automation.shot_nos_from_fns(fns_sorted, pattern=fn_format_movie.format(shot='(\d+)'))
     if n_files == n_file_prev:
-        logger.warning(f'Number of files, {n_files}, has not changed after shot!')
+        logger.warning(f'Number of files, {n_files}, has not changed after shot! {path_auto_export}')
 
     if n_files > 0:
-        fn_new, age_fn_new, shot_fn_new = Path(fns_sorted[0]), ages[0], saved_shots[0]
+        fn_new, age_fn_new, age_fn_new_sec, t_mod_fn_new, shot_fn_new = Path(fns_sorted[0]), ages[0], ages_sec[0], t_mod[0], saved_shots[0],
         path_fn_new = path_auto_export / fn_new
-        logger.info(f'File "{fn_new}" for shot {shot_fn_new} ({shot} expected) saved {age_fn_new:0.1f} s ago')
+        logger.info(f'File "{fn_new}" for shot {shot_fn_new} ({shot} expected) saved {age_fn_new.total_seconds():0.1f} s ago')
 
         # TODO: Compare time of shot change to time of file creation
-        if (shot_fn_new != shot) and (age_fn_new < TIME_TYPICAL_MIN_INTERSHOT):
-            fn_expected = fn_format_movie.format(shot=f'0{shot}')
-            path_fn_expected = path_auto_export / fn_expected
-            if not path_fn_expected.is_file():
-                logger.info(f'Renaming latest file from "{path_fn_new.name}" to "{path_fn_expected.name}"')
-                path_fn_new.rename(path_fn_expected)
-                path_fn_new = path_fn_expected
+        if (shot_fn_new != shot):
+            dt_file_since_shot_change = (t_mod_fn_new-t_shot_change).total_seconds()
+            if dt_file_since_shot_change > 0:
+                fn_expected = fn_format_movie.format(shot=f'0{shot}')
+                path_fn_expected = path_auto_export / fn_expected
                 if not path_fn_expected.is_file():
-                    logger.warning(f'File rename failed')
+                    logger.info(f'Renaming latest file from "{path_fn_new.name}" to "{path_fn_expected.name}"')
+                    path_fn_new.rename(path_fn_expected)
+                    path_fn_new = path_fn_expected
+                    if not path_fn_expected.is_file():
+                        logger.warning(f'File rename failed')
+                else:
+                    logger.warning(f'>>>> Expected shot no file already exists: {path_fn_expected.name}. '
+                                   f'Not sure how to rename {fn_new}\nPulses saved: {saved_pulses} <<<<')
             else:
-                logger.warning(f'Expected shot no file already exists: {path_fn_expected.name}. '
-                               f'Not sure how to rename {fn_new}\nPulses saved: {saved_pulses}')
+                logger.warning(f'>>>> Newest file is older than time of change to latest shot number.'
+                'File created at {t_mod_fn_new}. Shot state change at {t_shot_change}. dt={dt_file_since_shot_change} < 0 <<<<')
         if path_fn_new.is_file():
             dest = path_export_today / path_fn_new.name
-            dest.write_bytes(path_fn_new.read_bytes())  # for binary files
-            logger.info(f'Wrote new movie file to {dest}')
+            path_fn_new.rename(dest)
+            logger.info(f'Moved latest file to {dest.parent} to preserve creation history')
+
+            path_fn_new.write_bytes(dest.read_bytes())  # for binary files
+            logger.info(f'Coppied new movie file back to {path_fn_new}')
         else:
             logger.warning(f'New file does not exist: {path_fn_new}')
     return n_files
@@ -176,6 +203,7 @@ def automate_ax5_camera_researchir():
     # TODO: Set with argpass?
     if host == 'MWIR-PC1':
         active_cameras = {'LWIR1': False, 'MWIR1': True, 'Px_protection': True, 'SW_beam_dump': False}
+        # active_cameras = {'LWIR1': False, 'MWIR1': False, 'Px_protection': True, 'SW_beam_dump': False}
     else:
         active_cameras = {'LWIR1': True, 'MWIR1': False, 'Px_protection': False, 'SW_beam_dump': False}
 
@@ -203,8 +231,10 @@ def automate_ax5_camera_researchir():
 
     date_str, paths_today = check_date(auto_export_paths=auto_export_paths)
 
+    armed = arm_scientific_cameras(active_cameras, armed={})
+
     times = dict(state_change=None, shot_change=None, shot_expected=None)
-    armed = {}
+
     n_files = {camera: 0 for camera, active in active_cameras.items() if active}
     recording = False
     ops_hours = True
@@ -217,10 +247,14 @@ def automate_ax5_camera_researchir():
         shot, state, times, shot_updated, state_updafted = update_state_and_shot(FPATH_MSG_LOG, shot, state, times)
 
         if ((t_now.time() > START_TIME) and (t_now.time() < STOP_TIME)) or state_updafted:
-            time.sleep(TIME_REFRESH_MAIN_LOOP_OPS)
+            if state in ('PreShot', 'Trigger'):
+                time.sleep(TIME_REFRESH_MAIN_LOOP_PRESHOT)
+            else:
+                time.sleep(TIME_REFRESH_MAIN_LOOP_OPS)
 
             if not ops_hours:
                 logger.info('>>> GOOD MORNING <<<')
+                logger.info(f'{BARS} Waiting for shot {shot+1}. State: "{state}" {BARS}')
                 ops_hours = True
                 if AUTOMATE_DAPROXY:
                     daproxy.kill_da_proxy(proc_da_proxy)
@@ -240,6 +274,7 @@ def automate_ax5_camera_researchir():
         if (shot_updated) and (shot_recorded_last != shot-1):
             logger.warning(f'A shot has been missed! Last recorded shot was {shot_recorded_last}')
 
+        t_now = datetime.datetime.now()
         dt_shot = (times['shot_expected'] - t_now).total_seconds() if (times['shot_expected'] is not None) else None
         if dt_shot is None:
             continue
@@ -253,9 +288,11 @@ def automate_ax5_camera_researchir():
 
 
         if (dt_shot >= 0):
-            logger.info(f'Shot expected in dt: {dt_shot:0.1f} s')
+            if loop_cnt % LOOP_COUNT_UPDATE == 0:
+                logger.info(f'Shot expected in dt: {dt_shot:0.1f} s')
 
             if (dt_shot <= TIME_RECORD_PRE_SHOT) and (not recording):
+                logger.info(f'Starting protection cameras recording {TIME_RECORD_PRE_SHOT:0.1f}s before shot for {TIME_DURATION_RECORD:0.1f}s')
                 # Start recording protection views
                 if active_cameras['Px_protection']:
                     start_recording_research_ir(PIXEL_COORDS_IMAGE['Px_protection'], 'Px_protection')
@@ -264,19 +301,16 @@ def automate_ax5_camera_researchir():
                 recording = True
 
             else:
-                camera = 'MWIR1'
-                if active_cameras[camera] and not armed.get(camera, False):
-                    # Make sure MWIR1 is armed (should already be after last shot)
-                    start_recording_research_ir(PIXEL_COORDS_IMAGE[camera], camera=camera)
-                    armed[camera] = True
-                if active_cameras['LWIR1']:
-                    raise NotImplementedError
+                # TIME_RECORD_PRE_SHOT before shot
+                armed = arm_scientific_cameras(active_cameras, armed)
+
     
-            if (dt_recording_finished >= 0):
-                logger.info(f'Recording should finish in dt: {dt_recording_finished} s')
+        elif (dt_recording_finished >= 0):
+            if loop_cnt % LOOP_COUNT_UPDATE == 0:
+                logger.info(f'Recording should finish in dt: {dt_recording_finished:0.1f} s')
 
 
-        if (dt_recording_finished <= 0) and (recording):
+        if (dt_recording_finished <= -5) and (recording):
             # Protection recordings complete, rename files and organise into todays date folders
             recording = False
             shot_recorded_last = shot
@@ -287,13 +321,8 @@ def automate_ax5_camera_researchir():
                                                     t_shot_change=times['shot_change'])
                     armed[camera] = False
 
-        if (dt_re_arm <= 0):
-            if active_cameras['MWIR1']:
-                logger.info('Re-arming MWIR1')
-                start_recording_research_ir(PIXEL_COORDS_IMAGE['MWIR1'], camera='MWIR1')
-            if active_cameras['LWIR1']:
-                logger.info('Re-arming LWIR1')
-                raise NotImplementedError
+        if (dt_re_arm <= 0) or (state == 'PostShot'):
+            armed = arm_scientific_cameras(active_cameras, armed)
 
 
 if __name__ == '__main__':
