@@ -23,11 +23,11 @@ path_auto_export = Path(f'D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_c
 path_auto_export_backup = Path(f'D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export_backup')
 path_t_drive = Path(f'T:\\tfarley\\RIT\\')
 path_t_drive_today = path_t_drive / date_str
-path_freia = Path(f'H:\\data\\movies\\diagnostic_pc_transfer\\')
+path_freia = Path(f'H:\\data\\movies\\diagnostic_pc_transfer\\rit\\')
 path_freia_today = path_freia / date_str
 path_todays_pulses = path_auto_export.parent / date_str
 # fn_shot = (path_t_drive / '../next_mast_u_shot_no.csv').resolve()
-fn_shot = (path_freia / 'next_mast_u_shot_no.csv').resolve()
+fn_shot = (path_freia / '../next_mast_u_shot_no.csv').resolve()
 copy_to_freia = True
 
 n_min_wait_dir_refresh = 0.25
@@ -35,7 +35,7 @@ n_min_wait_post_pulse = 2
 
 # Mouse coords from top left (1920 x 1080) -> (860)
 # record_button_pixel_coords = np.array([500, 890], dtype=int) #  ??
-pixel_coords = {'record_button': [580, 766],  #  1920 x 1080, not full screen
+pixel_coords = {'record_button': [505, 766],  # [580, 766],  #  1920 x 1080, not full screen
                 'file': [15, 32],
                 'export': [20, 170],
                 'int16_seq': [220, 220],
@@ -112,7 +112,7 @@ def auto_trigger(path_hdd_out):
               1) Automate clicking the record button after a movie has been recorded
               2) Export the recording to a .raw movie file
               3) Copy the exported movie to a directory under todays date
-              4) Copy the exported movie to the T drive for processing on freia""")
+              4) Copy the exported movie to freia for processing""")
 
     fns, dirs_top = get_fns_and_dirs(path_hdd_out)
     n_dirs_initial = len(dirs_top)
@@ -165,9 +165,9 @@ def auto_trigger(path_hdd_out):
                             copy_dir(path_todays_pulses, path_freia)
                     
                     print(f'{datetime.now()}: Waiting {n_min_wait_post_pulse} mins after shot {shot_number} before re-arming to ensure pulse train has finished from previous shot')
+                    time.sleep(n_min_wait_post_pulse*60) # you need to leave this pause when it detects that the record is done. otherwise it clicks too early.
                     shot_number += 1    
                     write_shot_number(fn_shot, shot_number)          
-                    time.sleep(n_min_wait_post_pulse*60) # you need to leave this pause when it detects that the record is done. otherwise it clicks too early.
                     post_pulse = False
                 
                 print(f'{datetime.now()}: Clicking record button at {tuple(pixel_coords["record_button"])} ({n_dirs} dirs)')
