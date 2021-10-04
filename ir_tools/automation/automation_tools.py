@@ -404,17 +404,17 @@ def sigint_handler(proc_da_proxy):
 
 def arm_scientific_cameras(active_cameras, armed, pixel_coords_image):
     camera = 'MWIR1'
-    if active_cameras[camera] and (not armed.get(camera, False)):
+    if active_cameras.get(camera, False) and (not armed.get(camera, False)):
         from ir_tools.automation.flir_researchir_automation import start_recording_research_ir
         logger.info(f'Re-arming {camera}')
         start_recording_research_ir(pixel_coords_image[camera], camera=camera)
         armed[camera] = True
     camera = 'LWIR1'
-    if active_cameras[camera] and (not armed.get(camera, False)):
+    if active_cameras.get(camera, False) and (not armed.get(camera, False)):
         from ir_tools.automation.ircam_works_automation import start_recording_ircam_works
         logger.info('Re-arming LWIR1')
-        armed[camera] = start_recording_ircam_works(pixel_coords=pixel_coords_image[camera], armed=armed[camera],
-                                                    logger=logger)
+        armed[camera] = start_recording_ircam_works(pixel_coords=pixel_coords_image[camera],
+                                                    armed=armed.get(camera, False), logger=logger)
     return armed
 
 
