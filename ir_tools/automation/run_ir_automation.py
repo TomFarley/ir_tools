@@ -34,7 +34,7 @@ FNS_FORMAT_MOVIE = {'LWIR1': '{shot}.RAW',
                     'Px_protection': '{shot}.seq',  # shot=(\d+) for regex match
                     'SW_beam_dump': '{shot}.seq'}
 
-AUTOMATE_DAPROXY = False
+AUTOMATE_DAPROXY = True
 
 FPATH_LOG = Path('MWIR1_pc.log')
 
