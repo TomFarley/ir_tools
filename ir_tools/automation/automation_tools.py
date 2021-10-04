@@ -6,7 +6,6 @@
 Created: 
 """
 import csv
-import datetime
 import logging
 import os, re
 import shutil
@@ -84,6 +83,7 @@ def check_freia_access():
 def file_updated(path_fn, t_mod_prev=None):
     t_mod = Path(path_fn).stat().st_mtime
     t_mod = datetime.fromtimestamp(t_mod)
+
     if (t_mod != t_mod_prev) or (t_mod_prev is None):
         modified = True
     else:
@@ -377,7 +377,7 @@ def empty_auto_export(path_auto_export):
 
 
 def check_date(auto_export_paths):
-    date = datetime.datetime.now()
+    date = datetime.now()
     date_str = date.strftime('%Y-%m-%d')
     paths_today = dict()
     if date.weekday() <= 5:
