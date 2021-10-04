@@ -69,7 +69,7 @@ def automate_ir_cameras(active_cameras=()):
         raise ValueError('No active cameras')
 
     logger.info(
-        f'Starting camera automation on {host} PC for cameras: '
+        f'Starting camera automation for cameras: '
         f'{", ".join([camera for camera, active in active_cameras.items() if active])}')
 
     if AUTOMATE_DAPROXY:
@@ -201,6 +201,7 @@ if __name__ == '__main__':
         # active_cameras = {'LWIR1': False, 'MWIR1': False, 'Px_protection': True, 'SW_beam_dump': False}
     else:
         active_cameras = {'LWIR1': True, 'MWIR1': False, 'Px_protection': False, 'SW_beam_dump': False}
+    logger.info(f'Starting automation on "{host}" PC ')
 
-    automate_ir_cameras()
+    automate_ir_cameras(active_cameras=active_cameras)
     pass
