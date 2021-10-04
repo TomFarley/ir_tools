@@ -193,7 +193,12 @@ def get_state(fn , logger=None):
         '35': 'Arm',
         'UNDEFINED': 'UNDEFINED',
     }
-    state = states[from_msg_log(fn, 'state', logger=logger)]
+    state_no = from_msg_log(fn, 'state', logger=logger)
+    if state_no in states:
+        state = states[state_no]
+    else:
+        print(f'Machine state not recognised: "{state_no}"')
+        state = 'UNDEFINED'
 
     if logger is not None:
         logger.info('state: ' + state)
@@ -208,7 +213,16 @@ def get_shot(fn, logger=None):
     if logger is not None:
         logger.info('shot: ' + shot)
 
-    return int(shot)
+    if shot in ('', 'UNDEFINED'):
+        print(f'Failed to retrieve shot number')
+    else:
+        try:
+            shot = int(shot)
+        except Exception as e:
+            print(f'Bad value for shot from daproxy: {e}. Set shot to 0.')
+            shot = 0
+
+    return shot
 
 def get_last_line_windows(fn):
     with open(fn, 'r') as f:

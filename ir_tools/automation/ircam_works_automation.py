@@ -8,7 +8,7 @@ from copy import copy
 from pathlib import Path
 import csv
 
-from ir_tools.automation.ir_automation import (click_mouse, get_fns_and_dirs, copy_files, copy_dir, delete_files_in_dir,
+from ir_tools.automation.automation_tools import (click_mouse, get_fns_and_dirs, copy_files, copy_dir, delete_files_in_dir,
     read_shot_number, write_shot_number, mkdir)
 
 logger = logging.getLogger(__name__)
