@@ -325,7 +325,7 @@ def move_files_in_dir(path_from, path_to):
     fns = filenames_in_dir(path_from)
     for fn in fns:
         path_fn = Path(path_from) / fn
-        path_fn_new = Path(parh_to) / fn
+        path_fn_new = Path(path_to) / fn
         path_fn.replace(path_fn_new)
     logger.info(f'Moved files from "{path_from}" to "{path_to}": {fns}')
     time.sleep(0.5)
