@@ -8,7 +8,7 @@ from copy import copy
 from pathlib import Path
 import csv
 
-from ir_automation import (click, get_fns_and_dirs, copy_files, copy_dir, delete_files_in_dir,
+from ir_tools.automation.ir_automation import (click_mouse, get_fns_and_dirs, copy_files, copy_dir, delete_files_in_dir,
     read_shot_number, write_shot_number, mkdir)
 
 logger = logging.getLogger(__name__)
@@ -119,7 +119,7 @@ def start_recording_ircam_works(pixel_coords, armed=None, logger=None):
         if logger is not None:
             logger.info(f'{datetime.now()}: Clicking record button at {tuple(pixel_coords["record_button"])} ({n_dirs} dirs)')
 
-        click(*tuple(pixel_coords["record_button"]))  # click record button
+        click_mouse(*tuple(pixel_coords["record_button"]))  # click record button
         keyboard.press(Key.ctrl)
         keyboard.release(Key.ctrl)
         time.sleep(1)
@@ -218,7 +218,7 @@ def auto_trigger(path_hdd_out):
                     post_pulse = False
                 
                 print(f'{datetime.now()}: Clicking record button at {tuple(pixel_coords["record_button"])} ({n_dirs} dirs)')
-                click(*tuple(pixel_coords["record_button"]))  # click record button
+                click_mouse(*tuple(pixel_coords["record_button"]))  # click record button
                 keyboard.press(Key.ctrl)
                 keyboard.release(Key.ctrl)
                 time.sleep(5)

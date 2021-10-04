@@ -189,11 +189,11 @@ def monitor_uda_latest_shot(t_refresh=2):
         pass
 
 
-def click(x, y):
+def click_mouse(x_pix, y_pix):
     import win32api, win32con
-    win32api.SetCursorPos((x, y))
-    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, x, y, 0, 0)
-    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, x, y, 0, 0)
+    win32api.SetCursorPos((x_pix, y_pix))
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, x_pix, y_pix, 0, 0)
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, x_pix, y_pix, 0, 0)
 
 
 def move_mouse(x, y):
