@@ -301,7 +301,7 @@ def copy_dir(path_from, path_to, append_from_name=True):
         path_to.mkdir()
         print(f'Created new directory {path_to}')
     try:
-        shutil.copytree(path_from, path_to, dirs_exist_ok=True)
+        shutil.copytree(str(path_from), str(path_to), dirs_exist_ok=True)
     except Exception as e:
         print(e)
     else:
