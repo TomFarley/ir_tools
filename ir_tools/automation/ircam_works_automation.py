@@ -117,7 +117,7 @@ def start_recording_ircam_works(pixel_coords_record, armed=None, logger=None):
 
     if not armed:
         if logger is not None:
-            logger.info(f'{datetime.now()}: Clicking record button at {tuple(pixel_coords_record)}')
+            logger.info(f'Clicking record button at {tuple(pixel_coords_record)}')
 
         click_mouse(*tuple(pixel_coords_record))  # click record button
         keyboard.press(Key.ctrl)

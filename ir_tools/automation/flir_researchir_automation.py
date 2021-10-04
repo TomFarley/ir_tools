@@ -126,15 +126,18 @@ def automate_research_ir():
         print('script terminated')
         pass
 
-def start_recording_research_ir(pixel_coords, camera):
+def start_recording_research_ir(pixel_coords, camera, logger=None):
     from pynput.keyboard import Key, Controller
     keyboard = Controller()
-
-    logger.info(f'Start recording for "{camera}" camera. Clicking on image {pixel_coords} and pressing F5.')
+    if logger is not None:
+        logger.info(f'Start recording for "{camera}" camera. Clicking on image {pixel_coords} and pressing F5.')
     try:
         automation_tools.click_mouse(*pixel_coords)
     except Exception as e:
-        logger.excetion(f'Failed to start Research IR recording for "{camera}" whith click at {pixel_coords}')
+        if logger is not None:
+            logger.excetion(f'Failed to start Research IR recording for "{camera}" with click at {pixel_coords}')
+        else:
+            print(f'Failed to start Research IR recording for "{camera}" with click at {pixel_coords}')
     keyboard.press(Key.f5)
     keyboard.press(Key.ctrl)  # Display mouse location
     keyboard.release(Key.ctrl)
