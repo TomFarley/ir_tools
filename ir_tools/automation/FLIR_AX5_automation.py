@@ -36,7 +36,7 @@ AUTOMATE_DAPROXY = False
 
 FPATH_LOG = Path('MWIR1_pc.log')
 
-TIME_REFRESH_MAIN_LOOP_OPS = 10  # sec. The MAST-U Abort state seems to only last for ~10s
+TIME_REFRESH_MAIN_LOOP_OPS = 25  # sec. The MAST-U Abort state seems to only last for ~10s
 TIME_REFRESH_MAIN_LOOP_PRESHOT = 1  # sec. The MAST-U Abort state seems to only last for ~10s
 TIME_REFRESH_MAIN_LOOP_NON_OPS = 10*60  # sec. The MAST-U Abort state seems to only last for ~10s
 TIME_DELEY_PRESHOT = 105  # sec. PreShot comes ~2min before shot
@@ -45,7 +45,7 @@ TIME_DURATION_RECORD = 25  # sec. Duration of movie recording set in ResearchIR
 TIME_DELAY_REARM = 120  # sec. Time to wait for clock train to finish.
 TIME_TYPICAL_MIN_INTERSHOT = 3 * 60  # sec. Normally at least 3 min between shots
 
-LOOP_COUNT_UPDATE = 10  # loops. No point in updating this too often as Github pages site lag by ~20 min
+LOOP_COUNT_UPDATE = 8  # loops. No point in updating this too often as Github pages site lag by ~20 min
 STOP_TIME = datetime.time(20, 10)
 START_TIME = datetime.time(7, 50)
 
@@ -288,7 +288,7 @@ def automate_ax5_camera_researchir():
 
 
         if (dt_shot >= 0):
-            if loop_cnt % LOOP_COUNT_UPDATE == 0:
+            if (loop_cnt % LOOP_COUNT_UPDATE == 0) or (dt_shot < 7):
                 logger.info(f'Shot expected in dt: {dt_shot:0.1f} s')
 
             if (dt_shot <= TIME_RECORD_PRE_SHOT) and (not recording):
@@ -306,7 +306,7 @@ def automate_ax5_camera_researchir():
 
     
         elif (dt_recording_finished >= 0):
-            if loop_cnt % LOOP_COUNT_UPDATE == 0:
+            if (loop_cnt % LOOP_COUNT_UPDATE == 0) or (dt_recording_finished < 2):
                 logger.info(f'Recording should finish in dt: {dt_recording_finished:0.1f} s')
 
 

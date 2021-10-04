@@ -316,7 +316,7 @@ def delete_files_in_dir(path, glob='*'):
             file.unlink()
     print(f'Deleted files {deleted_files} in {path}')
 
-def move_file_in_dir(path_from, path_to):
+def move_files_in_dir(path_from, path_to):
     if not path_to.is_dir():
         path_to.mkdir()
         print(f'Created new directory {path_to}')
