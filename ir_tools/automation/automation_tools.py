@@ -16,8 +16,6 @@ from typing import Union, Iterable, Sequence, Tuple, Optional, Any, Dict
 from pathlib import Path
 
 import numpy as np
-from ir_tools.automation import daproxy
-from ir_tools.automation.flir_researchir_automation import start_recording_research_ir
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -395,6 +393,8 @@ def check_date(auto_export_paths):
 
 
 def sigint_handler(proc_da_proxy):
+    from ir_tools.automation import daproxy
+
     def _sigint_handler(sig, frame):
         logger.info('>>> CTRL+C <<<')
         daproxy.kill_da_proxy(proc_da_proxy)
