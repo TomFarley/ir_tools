@@ -108,7 +108,7 @@ def check_camera_armed(path_hdd_out=PATH_HDD_OUT):
 
     return armed, armed_fn
 
-def start_recording_ircam_works(pixel_coords, armed=None, logger=None):
+def start_recording_ircam_works(pixel_coords_record, armed=None, logger=None):
     from pynput.keyboard import Key, Controller
     keyboard = Controller()
 
@@ -117,9 +117,9 @@ def start_recording_ircam_works(pixel_coords, armed=None, logger=None):
 
     if not armed:
         if logger is not None:
-            logger.info(f'{datetime.now()}: Clicking record button at {tuple(pixel_coords["record_button"])} ({n_dirs} dirs)')
+            logger.info(f'{datetime.now()}: Clicking record button at {tuple(pixel_coords_record)}')
 
-        click_mouse(*tuple(pixel_coords["record_button"]))  # click record button
+        click_mouse(*tuple(pixel_coords_record))  # click record button
         keyboard.press(Key.ctrl)
         keyboard.release(Key.ctrl)
         time.sleep(1)
