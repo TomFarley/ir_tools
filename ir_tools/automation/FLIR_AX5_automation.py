@@ -246,7 +246,7 @@ def automate_ax5_camera_researchir():
         t_now = datetime.datetime.now()
         shot, state, times, shot_updated, state_updafted = update_state_and_shot(FPATH_MSG_LOG, shot, state, times)
 
-        if ((t_now.time() > START_TIME) and (t_now.time() < STOP_TIME)) or state_updafted:
+        if ((t_now.time() > START_TIME) and (t_now.time() < STOP_TIME)) and (t_now.weekday() <= 5) or state_updafted:
             if state in ('PreShot', 'Trigger'):
                 time.sleep(TIME_REFRESH_MAIN_LOOP_PRESHOT)
             else:
