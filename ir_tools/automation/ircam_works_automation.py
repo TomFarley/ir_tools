@@ -5,8 +5,6 @@ import time
 import numpy as np
 from datetime import datetime
 from copy import copy
-import clipboard
-from pynput.keyboard import Key, Controller
 from pathlib import Path
 import csv
 
@@ -15,7 +13,6 @@ from ir_automation import (click, get_fns_and_dirs, copy_files, copy_dir, delete
 
 logger = logging.getLogger(__name__)
 
-keyboard = Controller()
 
 # shot_number = 44103
     
@@ -65,6 +62,10 @@ def check_for_armed_file(fns):
     return armed, armed_fn
 
 def export_movie(shot_number, camera, check_unarmed=True):
+    import clipboard
+    from pynput.keyboard import Key, Controller
+    keyboard = Controller()
+
     if check_unarmed:
         armed, _ = check_camera_armed()
     if not armed:
@@ -108,6 +109,9 @@ def check_camera_armed(path_hdd_out=PATH_HDD_OUT):
     return armed, armed_fn
 
 def start_recording_ircam_works(pixel_coords, armed=None, logger=None):
+    from pynput.keyboard import Key, Controller
+    keyboard = Controller()
+
     if armed is None:
         armed, armed_fn = check_camera_armed(PATH_HDD_OUT)
 
@@ -133,6 +137,9 @@ def start_recording_ircam_works(pixel_coords, armed=None, logger=None):
     return armed
 
 def auto_trigger(path_hdd_out):
+    import clipboard
+    from pynput.keyboard import Key, Controller
+    keyboard = Controller()
 
     shot_number = read_shot_number(fn_shot)
 

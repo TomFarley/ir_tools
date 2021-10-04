@@ -13,11 +13,6 @@ import logging, signal, time, datetime, os
 from typing import Union, Iterable, Sequence, Tuple, Optional, Any, Dict
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
-import xarray as xr
-import matplotlib.pyplot as plt
-
 from ir_tools.automation import automation_tools, daproxy, flir_researchir_automation, ircam_works_automation
 from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot, get_state
 from ir_tools.automation.automation_tools import make_iterable
