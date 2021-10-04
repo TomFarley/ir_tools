@@ -16,9 +16,9 @@ import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
 
-from ir_tools.automation import ir_automation, daproxy
+from ir_tools.automation import ir_automation_tools, daproxy
 from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot, get_state
-from ir_tools.automation.ir_automation import make_iterable
+from ir_tools.automation.ir_automation_tools import make_iterable
 
 PATHS_AUTO_EXPORT = {'LWIR1': Path('D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export\\'),
                      'MWIR1': Path('D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export\\'),
@@ -70,10 +70,10 @@ keyboard = Controller()
 
 def empty_auto_export(path_auto_export):
     path_auto_export_backup = (path_auto_export / '..' / 'auto_export_backup').resolve()
-    ir_automation.mkdir(path_auto_export_backup)
-    ir_automation.move
-    ir_automation.copy_files(path_auto_export, path_auto_export_backup)
-    ir_automation.delete_files_in_dir(path_auto_export)  # , glob='*.RAW')
+    ir_automation_tools.mkdir(path_auto_export_backup)
+    ir_automation_tools.move_files_in_dir(path_auto_export, path_auto_export_backup)
+    # ir_automation.copy_files(path_auto_export, path_auto_export_backup)
+    # ir_automation.delete_files_in_dir(path_auto_export)  # , glob='*.RAW')
     logger.info(f'Moved previously exported files to {path_auto_export_backup} from {path_auto_export}')
 
 def check_date(auto_export_paths):
@@ -84,7 +84,7 @@ def check_date(auto_export_paths):
         # No weekend ops
         for camera, path in auto_export_paths.items():
             path_export_today = (path / '../dates' / date_str).resolve()
-            success, created = ir_automation.mkdir(path_export_today)
+            success, created = ir_automation_tools.mkdir(path_export_today)
             paths_today[camera] = path_export_today
             if created:
                 empty_auto_export(path)
@@ -99,7 +99,7 @@ def sigint_handler(proc_da_proxy):
     return _sigint_handler
 
 def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
-    modified_da_log, t_state_change = ir_automation.file_updated(FPATH_MSG_LOG, t_mod_prev=times['state_change'])
+    modified_da_log, t_state_change = ir_automation_tools.file_updated(FPATH_MSG_LOG, t_mod_prev=times['state_change'])
     if modified_da_log:
         shot, state = get_shot(fn=FPATH_MSG_LOG), get_state(fn=FPATH_MSG_LOG)
         times['state_change'] = t_state_change
@@ -135,7 +135,7 @@ def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
 def start_recording_research_ir(pixel_coords, camera):
     logger.info(f'Start recording for "{camera}" camera. Clicking on image {pixel_coords} and pressing F5.')
     try:
-        ir_automation.click(*pixel_coords)
+        ir_automation_tools.click(*pixel_coords)
     except Exception as e:
         logger.excetion(f'Failed to start Research IR recording for "{camera}" whith click at {pixel_coords}')
     keyboard.press(Key.f5)
@@ -156,11 +156,11 @@ def arm_scientific_cameras(active_cameras, armed):
     return armed
 
 def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export_today, n_file_prev, t_shot_change):
-    fns_autosaved = ir_automation.filenames_in_dir(path_auto_export)
-    fns_sorted, i_order, t_mod, ages, ages_sec = ir_automation.sort_files_by_age(fns_autosaved, path=path_auto_export)
+    fns_autosaved = ir_automation_tools.filenames_in_dir(path_auto_export)
+    fns_sorted, i_order, t_mod, ages, ages_sec = ir_automation_tools.sort_files_by_age(fns_autosaved, path=path_auto_export)
     n_files = len(fns_sorted)
 
-    saved_shots = ir_automation.shot_nos_from_fns(fns_sorted, pattern=fn_format_movie.format(shot='(\d+)'))
+    saved_shots = ir_automation_tools.shot_nos_from_fns(fns_sorted, pattern=fn_format_movie.format(shot='(\d+)'))
     if n_files == n_file_prev:
         logger.warning(f'Number of files, {n_files}, has not changed after shot! {path_auto_export}')
 

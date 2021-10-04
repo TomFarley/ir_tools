@@ -563,18 +563,19 @@ def convert_ats_files_archive_to_ipx(pulses=None, path_in=None, date=None, copy_
 
 if __name__ == '__main__':
     # copy_raw_files_from_staging_area(write_ipx=True, date=-3)
+    copy_raw_files_from_staging_area(write_ipx=True, date='2021-10-01')
     # convert_raw_files_archive_to_ipx(path=Path('~/data/movies/mast_u/44777/rit/').expanduser())
 
     # path_ats = '~/data/movies/mast_u/rir_ats_files/{date}'
-    path_ats = '~/data/movies/diagnostic_pc_transfer/rir/{date}'
-
-    convert_ats_files_archive_to_ipx(path_in=path_ats, copy_ats_file=False,
-                                     fn_ats='0{pulse}.ats',
-                                     # fn_ats='rir-0{pulse}.ats',
-                                     date='today',
-                                     # date='2021-08-13',
-                                     # pulses=[44677],
-                                     # date='2021-05-13',
-                                     # pulses=[43952],  # Calibration movie
-                                     pulses=[44980],  # Calibration movie
-                                     )
+    # path_ats = '~/data/movies/diagnostic_pc_transfer/rir/{date}'
+    #
+    # convert_ats_files_archive_to_ipx(path_in=path_ats, copy_ats_file=False,
+    #                                  fn_ats='0{pulse}.ats',
+    #                                  # fn_ats='rir-0{pulse}.ats',
+    #                                  date='today',
+    #                                  # date='2021-08-13',
+    #                                  # pulses=[44677],
+    #                                  # date='2021-05-13',
+    #                                  # pulses=[43952],  # Calibration movie
+    #                                  pulses=[44980],  # Calibration movie
+    #                                  )

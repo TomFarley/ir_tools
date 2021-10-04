@@ -1,3 +1,5 @@
+"""Old automation script before DAproxy log available - uses pulse number csv file via freia/T drive mapping"""
+
 import os, shutil
 import time 
 import numpy as np

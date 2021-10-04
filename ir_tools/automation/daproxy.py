@@ -33,10 +33,14 @@ NO = '✕'
 
 
 
-def run_da_proxy(fpath_da_proxy):
+def run_da_proxy(fpath_da_proxy, windows=True):
     # run 'da_proxy' process to connect to MAST-U central messaging server
     logger.info('Starting da_proxy')
-    proc_da_proxy = subprocess.Popen(fpath_da_proxy)  # , shell=True, )
+    if windows:
+        proc_da_proxy = subprocess.call(fpath_da_proxy)
+    else:
+        proc_da_proxy = subprocess.Popen(fpath_da_proxy, shell=True, )
+
     time.sleep(5)  # da_proxy takes a couple of seconds to output its log file
     return proc_da_proxy
 

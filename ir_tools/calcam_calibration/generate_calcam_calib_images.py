@@ -255,15 +255,18 @@ def generate_calcam_calib_images(pulse=30378, camera='rir', machine='mast', n_st
 
 if __name__ == '__main__':
 
-    machine = 'mast_u'
-    # machine = 'mast'
+    # machine = 'mast_u'
+    machine = 'mast'
+
+    # camera = 'rir'
+    camera = 'rit'
 
     # pulse = 30378
     # pulse = 28866  # Low power
     # pulse = 29210  # High power
     # pulse = 30378  # High ELM surface temperatures ~450 C
 
-    # Full frame air:
+    # Full frame air (MAST):
     # pulse = 23586  # Full frame with clear spatial calibration - ref
     # pulse = 26505  # Full frame OSP only, 1D analysis profile, HIGH current - REQUIRES NEW CALCAM CALIBRATION
     # pulse = 28911
@@ -272,7 +275,15 @@ if __name__ == '__main__':
     # pulse = 29934
     # pulse = 30009
 
-    # Full frame ait:
+    # Full frame ait (MAST):
+    # pulse = 26957      #
+    # pulse = 27228          #
+    # pulse = 27232              #
+    # pulse = 27642                  #
+    # pulse = 27880                      #
+    pulse = 29936                          #
+
+    # Full frame ait (MAST-U):
     # pulse = 30459
     # pulse = 30458
     # pulse = 43141
@@ -281,11 +292,8 @@ if __name__ == '__main__':
     # pulse = 43805
     # pulse = 44760
     # pulse = 44673  # DN-700-SXD-OH
-    pulse = 43952  # early focus
+    # pulse = 43952  # early focus
 
-
-    camera = 'rir'
-    # camera = 'rit'
 
     n_start = 200
     # n_start = None
