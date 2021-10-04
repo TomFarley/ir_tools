@@ -1,6 +1,6 @@
 """Old automation script before DAproxy log available - uses pulse number csv file via freia/T drive mapping"""
 
-import os, shutil
+import os, shutil, logging
 import time 
 import numpy as np
 from datetime import datetime
@@ -13,6 +13,8 @@ import csv
 from ir_automation import (click, get_fns_and_dirs, copy_files, copy_dir, delete_files_in_dir,
     read_shot_number, write_shot_number, mkdir)
 
+logger = logging.getLogger(__name__)
+
 keyboard = Controller()
 
 # shot_number = 44103
@@ -20,7 +22,7 @@ keyboard = Controller()
 # path_hdd_out = 'D:\\IRVB\\2021-05-20'
 date_str = datetime.now().strftime('%Y-%m-%d')
 
-path_hdd_out = Path(r'D:\\MAST-U\LWIR_IRCAM1_HM04-A\Operations\To_be_exported')
+PATH_HDD_OUT = Path(r'D:\\MAST-U\LWIR_IRCAM1_HM04-A\Operations\To_be_exported')
 path_auto_export = Path(f'D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export')
 path_auto_export_backup = Path(f'D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export_backup')
 path_t_drive = Path(f'T:\\tfarley\\RIT\\')
@@ -62,7 +64,13 @@ def check_for_armed_file(fns):
         # print(f'Camera out of armed state')
     return armed, armed_fn
 
-def export_movie(shot_number):
+def export_movie(shot_number, camera, check_unarmed=True):
+    if check_unarmed:
+        armed, _ = check_camera_armed()
+    if not armed:
+        logger.warning(f'IRcam {camera} camera is still armed after shot - not exporting RAW data')
+        return False
+
     clipboard.copy(str(shot_number))
     
     click(*tuple(pixel_coords['file']))
@@ -81,18 +89,48 @@ def export_movie(shot_number):
         keyboard.press(char)
         time.sleep(0.1)
 
-
     time.sleep(0.5)
     keyboard.press(Key.enter)
     time.sleep(3)
     fns, dirs = get_fns_and_dirs(path_auto_export)
     if f'{shot_number}.RAW' in fns:
-        print(f'Exported current movie to {shot_number}.RAW')
+        logger.info(f'Exported current {camera} movie to {shot_number}.RAW')
         return True
     else:
-        print(f'Failed to export RAW movie to {path_auto_export}: {fns}')
+        print(f'Failed to export {camera} RAW movie to {path_auto_export}: {fns}')
         return False
 
+def check_camera_armed(path_hdd_out=PATH_HDD_OUT):
+
+    fns, dirs_top = get_fns_and_dirs(path_hdd_out)
+    armed, armed_fn = check_for_armed_file(fns)
+
+    return armed, armed_fn
+
+def start_recording_ircam_works(pixel_coords, armed=None, logger=None):
+    if armed is None:
+        armed, armed_fn = check_camera_armed(PATH_HDD_OUT)
+
+    if not armed:
+        if logger is not None:
+            logger.info(f'{datetime.now()}: Clicking record button at {tuple(pixel_coords["record_button"])} ({n_dirs} dirs)')
+
+        click(*tuple(pixel_coords["record_button"]))  # click record button
+        keyboard.press(Key.ctrl)
+        keyboard.release(Key.ctrl)
+        time.sleep(1)
+
+        armed, armed_fn = check_camera_armed(PATH_HDD_OUT)
+
+        if not armed:
+            if logger is not None:
+                logger.warning(f'FAILED to re-arm camera. Pressing F9 to try to arm camera')
+
+            keyboard.press(Key.f9)
+            time.sleep(1)
+            armed, armed_fn = check_camera_armed(PATH_HDD_OUT)
+
+    return armed
 
 def auto_trigger(path_hdd_out):
 
@@ -211,4 +249,4 @@ def auto_trigger(path_hdd_out):
 
 
 if __name__ == '__main__':
-    auto_trigger(path_hdd_out)
+    auto_trigger(PATH_HDD_OUT)

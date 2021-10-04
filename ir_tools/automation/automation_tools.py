@@ -6,6 +6,7 @@
 Created: 
 """
 import csv
+import datetime
 import logging
 import os, re
 import shutil
@@ -15,6 +16,8 @@ from typing import Union, Iterable, Sequence, Tuple, Optional, Any, Dict
 from pathlib import Path
 
 import numpy as np
+from ir_tools.automation import daproxy
+from ir_tools.automation.flir_researchir_automation import start_recording_research_ir
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -364,3 +367,96 @@ if __name__ == '__main__':
                                rit_intershot_job=True, rir_intershot_job=True)
     # monitor_uda_latest_shot()
     # update_next_shot_file(44140)
+
+
+def empty_auto_export(path_auto_export):
+    path_auto_export_backup = (path_auto_export / '..' / 'auto_export_backup').resolve()
+    mkdir(path_auto_export_backup)
+    move_files_in_dir(path_auto_export, path_auto_export_backup)
+    # ir_automation.copy_files(path_auto_export, path_auto_export_backup)
+    # ir_automation.delete_files_in_dir(path_auto_export)  # , glob='*.RAW')
+    logger.info(f'Moved previously exported files to {path_auto_export_backup} from {path_auto_export}')
+
+
+def check_date(auto_export_paths):
+    date = datetime.datetime.now()
+    date_str = date.strftime('%Y-%m-%d')
+    paths_today = dict()
+    if date.weekday() <= 5:
+        # No weekend ops
+        for camera, path in auto_export_paths.items():
+            path_export_today = (path / '../dates' / date_str).resolve()
+            success, created = mkdir(path_export_today)
+            paths_today[camera] = path_export_today
+            if created:
+                empty_auto_export(path)
+
+    return date_str, paths_today
+
+
+def sigint_handler(proc_da_proxy):
+    def _sigint_handler(sig, frame):
+        logger.info('>>> CTRL+C <<<')
+        daproxy.kill_da_proxy(proc_da_proxy)
+        raise KeyboardInterrupt
+    return _sigint_handler
+
+
+def arm_scientific_cameras(active_cameras, armed, pixel_coords_image):
+    camera = 'MWIR1'
+    if active_cameras[camera] and (not armed.get(camera, False)):
+        from ir_tools.automation.flir_researchir_automation import start_recording_research_ir
+        logger.info(f'Re-arming {camera}')
+        start_recording_research_ir(pixel_coords_image[camera], camera=camera)
+        armed[camera] = True
+    camera = 'LWIR1'
+    if active_cameras[camera] and (not armed.get(camera, False)):
+        from ir_tools.automation.ircam_works_automation import start_recording_ircam_works
+        logger.info('Re-arming LWIR1')
+        armed[camera] = start_recording_ircam_works(pixel_coords=pixel_coords_image[camera], armed=armed[camera],
+                                                    logger=logger)
+    return armed
+
+
+def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export_today, n_file_prev, t_shot_change):
+    fns_autosaved = filenames_in_dir(path_auto_export)
+    fns_sorted, i_order, t_mod, ages, ages_sec = sort_files_by_age(fns_autosaved, path=path_auto_export)
+    n_files = len(fns_sorted)
+
+    saved_shots = shot_nos_from_fns(fns_sorted, pattern=fn_format_movie.format(shot='(\d+)'))
+    if n_files == n_file_prev:
+        logger.warning(f'Number of files, {n_files}, has not changed after shot! {path_auto_export}')
+
+    if n_files > 0:
+        fn_new, age_fn_new, age_fn_new_sec, t_mod_fn_new, shot_fn_new = Path(fns_sorted[0]), ages[0], ages_sec[0], t_mod[0], saved_shots[0],
+        path_fn_new = path_auto_export / fn_new
+        logger.info(f'File "{fn_new}" for shot {shot_fn_new} ({shot} expected) saved {age_fn_new.total_seconds():0.1f} s ago')
+
+        # TODO: Compare time of shot change to time of file creation
+        if (shot_fn_new != shot):
+            dt_file_since_shot_change = (t_mod_fn_new-t_shot_change).total_seconds()
+            if dt_file_since_shot_change > 0:
+                fn_expected = fn_format_movie.format(shot=f'0{shot}')
+                path_fn_expected = path_auto_export / fn_expected
+                if not path_fn_expected.is_file():
+                    logger.info(f'Renaming latest file from "{path_fn_new.name}" to "{path_fn_expected.name}"')
+                    path_fn_new.rename(path_fn_expected)
+                    path_fn_new = path_fn_expected
+                    if not path_fn_expected.is_file():
+                        logger.warning(f'File rename failed')
+                else:
+                    logger.warning(f'>>>> Expected shot no file already exists: {path_fn_expected.name}. '
+                                   f'Not sure how to rename {fn_new}\nPulses saved: {saved_pulses} <<<<')
+            else:
+                logger.warning(f'>>>> Newest file is older than time of change to latest shot number.'
+                'File created at {t_mod_fn_new}. Shot state change at {t_shot_change}. dt={dt_file_since_shot_change} < 0 <<<<')
+        if path_fn_new.is_file():
+            dest = path_export_today / path_fn_new.name
+            path_fn_new.rename(dest)
+            logger.info(f'Moved latest file to {dest.parent} to preserve creation history')
+
+            path_fn_new.write_bytes(dest.read_bytes())  # for binary files
+            logger.info(f'Coppied new movie file back to {path_fn_new}')
+        else:
+            logger.warning(f'New file does not exist: {path_fn_new}')
+    return n_files

@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
+from ir_tools.automation import automation_tools
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -239,3 +240,38 @@ def from_msg_log(fn, field, logger=None):
 
 if __name__ == '__main__':
     pass
+
+
+def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
+    modified_da_log, t_state_change = automation_tools.file_updated(FPATH_MSG_LOG, t_mod_prev=times['state_change'])
+    if modified_da_log:
+        shot, state = get_shot(fn=FPATH_MSG_LOG), get_state(fn=FPATH_MSG_LOG)
+        times['state_change'] = t_state_change
+        times[state] = t_state_change
+
+        if shot != shot_prev:
+            logger.info(f'{BARS} Shot number changed to {shot}. State: "{state}" {BARS}')
+        else:
+            # if state in ('Ready', 'PreShot', 'Trigger', 'Abort'):
+            # if state_prev is not None:
+            logger.info(f'In state "{state}" for shot {shot}')
+
+        shot_time_estimate, delay = daproxy.update_estimated_shot_time(state, t_state_change, times.get('shot_expected'))
+        times['shot_expected'] = shot_time_estimate
+
+        if shot_time_estimate is not None:
+            times['finish_recording'] = times['shot_expected'] + datetime.timedelta(seconds=TIME_DURATION_RECORD-TIME_RECORD_PRE_SHOT)
+            times['re-arm'] = times['shot_expected'] + datetime.timedelta(seconds=TIME_DELAY_REARM)
+        state_updated = True
+        if (shot != shot_prev):
+            shot_updated = True
+            times['shot_change'] = t_state_change
+        else:
+            shot_updated = False
+    else:
+        state = state_prev
+        shot = shot_prev
+        state_updated = False
+        shot_updated = False
+
+    return shot, state, times, shot_updated, state_updated

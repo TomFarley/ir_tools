@@ -5,10 +5,10 @@ import numpy as np
 from datetime import datetime
 from pathlib import Path
 
-from ir_tools.automation.ir_automation_tools import (click, move_mouse, get_fns_and_dirs, copy_files, copy_dir,
-                                                     delete_files_in_dir, read_shot_number, write_shot_number,
-                                                     filenames_in_dir, mkdir)
-from ir_tools.automation import ir_automation_tools
+from ir_tools.automation.automation_tools import (click, move_mouse, get_fns_and_dirs, copy_files, copy_dir,
+                                                  delete_files_in_dir, read_shot_number, write_shot_number,
+                                                  filenames_in_dir, mkdir)
+from ir_tools.automation import automation_tools
 
 PATH_AUTO_EXPORT = Path(f'D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export')
 PATH_T_DRIVE = Path(f'T:\\tfarley\\RIR\\')
@@ -82,8 +82,8 @@ def automate_research_ir():
                 print(
                     f'{datetime.now()}: {new_number_of_files} files. New file present. Waiting {T_POST_PULSE} min for clock pulse train to finish.')
 
-                i_order, ages, fns_sorted = ir_automation_tools.sort_files_by_age(fns_autosaved, path=PATH_AUTO_EXPORT)
-                saved_shots = ir_automation_tools.shot_nos_from_fns(fns_sorted, pattern='(\d+).ats')
+                i_order, ages, fns_sorted = automation_tools.sort_files_by_age(fns_autosaved, path=PATH_AUTO_EXPORT)
+                saved_shots = automation_tools.shot_nos_from_fns(fns_sorted, pattern='(\d+).ats')
 
                 print(f'fns: {fns_sorted}')
                 print(f'pulses: {saved_shots}')
@@ -126,7 +126,18 @@ def automate_research_ir():
         print('script terminated')
         pass
 
+def start_recording_research_ir(pixel_coords, camera):
+    from pynput.keyboard import Key, Controller
+    keyboard = Controller()
+
+    logger.info(f'Start recording for "{camera}" camera. Clicking on image {pixel_coords} and pressing F5.')
+    try:
+        automation_tools.click(*pixel_coords)
+    except Exception as e:
+        logger.excetion(f'Failed to start Research IR recording for "{camera}" whith click at {pixel_coords}')
+    keyboard.press(Key.f5)
+    keyboard.press(Key.ctrl)  # Display mouse location
+    keyboard.release(Key.ctrl)
+
 if __name__ == '__main__':
     automate_research_ir()
-
-

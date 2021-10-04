@@ -15,7 +15,7 @@ import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
 
-from ir_tools.automation.ir_automation_tools import auto_update_next_shot_file
+from ir_tools.automation.automation_tools import auto_update_next_shot_file
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
