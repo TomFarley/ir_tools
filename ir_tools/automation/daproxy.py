@@ -257,6 +257,7 @@ if __name__ == '__main__':
 
 
 def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
+    from ir_tools.automation.run_ir_automation import TIME_DURATION_RECORD, TIME_RECORD_PRE_SHOT, TIME_DELAY_REARM
     modified_da_log, t_state_change = automation_tools.file_updated(FPATH_MSG_LOG, t_mod_prev=times['state_change'])
     if modified_da_log:
         shot, state = get_shot(fn=FPATH_MSG_LOG), get_state(fn=FPATH_MSG_LOG)
@@ -270,7 +271,7 @@ def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
             # if state_prev is not None:
             logger.info(f'In state "{state}" for shot {shot}')
 
-        shot_time_estimate, delay = daproxy.update_estimated_shot_time(state, t_state_change, times.get('shot_expected'))
+        shot_time_estimate, delay = update_estimated_shot_time(state, t_state_change, times.get('shot_expected'))
         times['shot_expected'] = shot_time_estimate
 
         if shot_time_estimate is not None:
