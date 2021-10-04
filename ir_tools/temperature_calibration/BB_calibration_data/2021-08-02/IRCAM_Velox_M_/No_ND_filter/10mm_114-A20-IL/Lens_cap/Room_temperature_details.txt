@@ -1,0 +1,4 @@
+Initial room temperature as measured by:
+BB source:  C
+Egg grow:  C
+Time: 00:00 00/00/2021

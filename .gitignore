@@ -6,4 +6,10 @@ ir_tools.egg-info/
 .coverage
 **.bkup
 tmp/
+ir_tools/calcam_calibration/calibration_images/
 **/plots/*
+*.err
+*.out
+*.png
+*.csv~
+*.log
