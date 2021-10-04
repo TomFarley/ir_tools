@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 from pathlib import Path
 
-from ir_tools.automation.automation_tools import (click, move_mouse, get_fns_and_dirs, copy_files, copy_dir,
+from ir_tools.automation.automation_tools import (click_mouse, move_mouse, get_fns_and_dirs, copy_files, copy_dir,
                                                   delete_files_in_dir, read_shot_number, write_shot_number,
                                                   filenames_in_dir, mkdir)
 from ir_tools.automation import automation_tools
@@ -106,7 +106,7 @@ def automate_research_ir():
 
                 time.sleep(T_POST_PULSE * 60)
                 print(f'{datetime.now()}: Clicking record ({PIXEL_COORDS["record"]})')
-                click(*PIXEL_COORDS["record"])
+                click_mouse(*PIXEL_COORDS["record"])
 
                 # print('just clicked record')
                 old_number_of_files = new_number_of_files
@@ -132,7 +132,7 @@ def start_recording_research_ir(pixel_coords, camera):
 
     logger.info(f'Start recording for "{camera}" camera. Clicking on image {pixel_coords} and pressing F5.')
     try:
-        automation_tools.click(*pixel_coords)
+        automation_tools.click_mouse(*pixel_coords)
     except Exception as e:
         logger.excetion(f'Failed to start Research IR recording for "{camera}" whith click at {pixel_coords}')
     keyboard.press(Key.f5)
