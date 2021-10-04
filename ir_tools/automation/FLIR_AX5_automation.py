@@ -71,9 +71,9 @@ keyboard = Controller()
 def empty_auto_export(path_auto_export):
     path_auto_export_backup = (path_auto_export / '..' / 'auto_export_backup').resolve()
     ir_automation.mkdir(path_auto_export_backup)
-    ir_automation.move
-    ir_automation.copy_files(path_auto_export, path_auto_export_backup)
-    ir_automation.delete_files_in_dir(path_auto_export)  # , glob='*.RAW')
+    ir_automation.move_files_in_dir(path_auto_export, path_auto_export_backup) 
+    # ir_automation.copy_files(path_auto_export, path_auto_export_backup)
+    # ir_automation.delete_files_in_dir(path_auto_export)  # , glob='*.RAW')
     logger.info(f'Moved previously exported files to {path_auto_export_backup} from {path_auto_export}')
 
 def check_date(auto_export_paths):
@@ -246,7 +246,7 @@ def automate_ax5_camera_researchir():
         t_now = datetime.datetime.now()
         shot, state, times, shot_updated, state_updafted = update_state_and_shot(FPATH_MSG_LOG, shot, state, times)
 
-        if ((t_now.time() > START_TIME) and (t_now.time() < STOP_TIME)) or state_updafted:
+        if ((t_now.time() > START_TIME) and (t_now.time() < STOP_TIME)) and (t_now.weekday() <= 5) or state_updafted:
             if state in ('PreShot', 'Trigger'):
                 time.sleep(TIME_REFRESH_MAIN_LOOP_PRESHOT)
             else:
