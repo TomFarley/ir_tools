@@ -94,7 +94,7 @@ def automate_ir_cameras(active_cameras=()):
 
     date_str, paths_today = automation_tools.check_date(auto_export_paths=auto_export_paths)
 
-    armed = automation_tools.arm_scientific_cameras(active_cameras, armed={})
+    armed = automation_tools.arm_scientific_cameras(active_cameras, armed={}, pixel_coords_image=PIXEL_COORDS_IMAGE)
 
     times = dict(state_change=None, shot_change=None, shot_expected=None)
 
@@ -165,7 +165,7 @@ def automate_ir_cameras(active_cameras=()):
 
             else:
                 # TIME_RECORD_PRE_SHOT before shot
-                armed = automation_tools.arm_scientific_cameras(active_cameras, armed)
+                armed = automation_tools.arm_scientific_cameras(active_cameras, armed, pixel_coords_image=PIXEL_COORDS_IMAGE)
 
 
         elif (dt_recording_finished >= 0):
@@ -190,7 +190,7 @@ def automate_ir_cameras(active_cameras=()):
                     armed[camera] = False
 
         if (dt_re_arm <= 0) or (state == 'PostShot'):
-            armed = automation_tools.arm_scientific_cameras(active_cameras, armed)
+            armed = automation_tools.arm_scientific_cameras(active_cameras, armed, pixel_coords_image=PIXEL_COORDS_IMAGE)
 
 
 if __name__ == '__main__':
