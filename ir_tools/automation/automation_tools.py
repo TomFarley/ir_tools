@@ -426,7 +426,7 @@ def arm_scientific_cameras(active_cameras, armed, pixel_coords_image):
     for camera in IRCAM_CAMERAS:
         if active_cameras.get(camera, False) and (not armed.get(camera, False)):
             from ir_tools.automation.ircam_works_automation import start_recording_ircam_works
-            logger.info('Re-arming {camera')
+            logger.info(f'Re-arming {camera}')
             armed[camera] = start_recording_ircam_works(pixel_coords_record=pixel_coords_image[camera],
                                                         armed=armed.get(camera, False), logger=logger)
     return armed

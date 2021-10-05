@@ -142,6 +142,12 @@ def start_recording_ircam_works(pixel_coords_record, armed=None, logger=None):
             time.sleep(1)
             armed, armed_fn = check_camera_armed(PATH_HDD_OUT)
 
+            if logger is not None:
+                if armed:
+                    logger.warning(f'SUCCESSFULLY re-armed camera.')
+                else:
+                    logger.warning(f'FAILED to re-arm camera.')
+
     return armed
 
 def auto_trigger(path_hdd_out):
