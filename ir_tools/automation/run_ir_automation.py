@@ -71,6 +71,8 @@ def automate_ir_cameras(active_cameras=()):
 
     armed = automation_tools.arm_scientific_cameras(active_cameras, armed={}, pixel_coords_image=PIXEL_COORDS_IMAGE)
 
+    logger.info(f'{paths_today}, {armed}, {active_cameras}')
+
     times = dict(state_change=None, shot_change=None, shot_expected=None)
 
     n_files = {camera: 0 for camera, active in active_cameras.items() if active}
@@ -163,7 +165,7 @@ def automate_ir_cameras(active_cameras=()):
                 if active:
                     n_files[camera] = automation_tools.organise_new_movie_file(PATHS_AUTO_EXPORT[camera],
                                                                                FNS_FORMAT_MOVIE[camera], shot,
-                                                                               path_export_today=paths_today[camera],
+                                                                               path_export_today=paths_today.get(camera),
                                                                                n_file_prev=n_files[camera], t_shot_change=times['shot_change'],
                                                                                camera=camera,
                                                                                path_freia_export=paths_today.get(f'{camera}_freia', None))
