@@ -457,12 +457,14 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
         path_fn_new = path_auto_export / fn_new
         logger.info(f'File "{fn_new}" for shot {shot_fn_new} ({shot} expected) saved {age_fn_new.total_seconds():0.1f} s ago')
 
+        if t_shot_change is not None:
+            dt_file_since_shot_change = (t_mod_fn_new - t_shot_change).total_seconds()
+        else:
+            dt_file_since_shot_change = None
+
         # TODO: Compare time of shot change to time of file creation
         if (shot_fn_new != shot):
-            if t_shot_change is not None:
-                dt_file_since_shot_change = (t_mod_fn_new-t_shot_change).total_seconds()
-            else:
-                dt_file_since_shot_change = None
+
             if (dt_file_since_shot_change is None) or (dt_file_since_shot_change >= 0):
                 fn_expected = fn_format_movie.format(shot=f'0{shot}')
                 path_fn_expected = path_auto_export / fn_expected
@@ -484,6 +486,10 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
                 logger.warning(f'File created at {t_mod_fn_new}. Shot state change at {t_shot_change}. '
                                f'dt={dt_file_since_shot_change:0.1f} < 0 ')
                 success = False
+        elif (dt_file_since_shot_change is None) or (dt_file_since_shot_change >= 0):
+            success = True
+        else:
+            logger.warning(f'File has write name but is too old ({dt_file_since_shot_change} s): {path_fn_new}')
         if success and path_fn_new.is_file():
             dest = path_export_today / path_fn_new.name
             path_fn_new.rename(dest)
