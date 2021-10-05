@@ -342,8 +342,9 @@ def move_files_in_dir(path_from, path_to):
         path_fn = Path(path_from) / fn
         path_fn_new = Path(path_to) / fn
         path_fn.replace(path_fn_new)
-    logger.info(f'Moved files from "{path_from}" to "{path_to}": {fns}')
-    time.sleep(0.5)
+    if len(fns) > 0:
+        logger.info(f'Moved files from "{path_from}" to "{path_to}": {fns}')
+        time.sleep(0.5)
     return fns
 
 def read_shot_number(fn_shot):
@@ -398,11 +399,12 @@ def check_date(auto_export_paths, freia_export_paths, active_cameras):
     if date.weekday() <= 5:
         # No weekend ops
         for camera, path in auto_export_paths.items():
-            path_export_today = (path / '../dates' / date_str).resolve()
-            success, created = mkdir(path_export_today)
-            paths_today[camera] = path_export_today
-            if created:
-                empty_auto_export(path)
+            if active_cameras.get(camera, False):
+                path_export_today = (path / '../dates' / date_str).resolve()
+                success, created = mkdir(path_export_today)
+                paths_today[camera] = path_export_today
+                if created:
+                    empty_auto_export(path)
         for camera, path in freia_export_paths.items():
             if active_cameras.get(camera, False):
                 path_export_today = (path / date_str).resolve()

@@ -100,7 +100,7 @@ def automate_ir_cameras(active_cameras=()):
             auto_export_paths[camera] = PATHS_AUTO_EXPORT[camera]
 
     date_str, paths_today = automation_tools.check_date(auto_export_paths=PATHS_AUTO_EXPORT,
-                                                        freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras)
+                                                freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras)
 
     armed = automation_tools.arm_scientific_cameras(active_cameras, armed={}, pixel_coords_image=PIXEL_COORDS_IMAGE)
 
@@ -131,7 +131,9 @@ def automate_ir_cameras(active_cameras=()):
                     daproxy.kill_da_proxy(proc_da_proxy)
 
             if loop_cnt % LOOP_COUNT_UPDATE == 0:
-                date_str, paths_today = automation_tools.check_date(auto_export_paths=auto_export_paths)
+                date_str, paths_today = automation_tools.check_date(auto_export_paths=PATHS_AUTO_EXPORT,
+                                                                    freia_export_paths=PATHS_FREIA_EXPORT,
+                                                                    active_cameras=active_cameras)
                 pass
         else:
             if ops_hours:
