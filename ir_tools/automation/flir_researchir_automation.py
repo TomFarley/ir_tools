@@ -1,5 +1,5 @@
 
-import os, re
+import os, re, logging
 import time as time
 import numpy as np
 from datetime import datetime
@@ -9,6 +9,7 @@ from ir_tools.automation.automation_tools import (click_mouse, move_mouse, get_f
                                                   delete_files_in_dir, read_shot_number, write_shot_number,
                                                   filenames_in_dir, mkdir)
 from ir_tools.automation import automation_tools
+from ir_tools.automation.run_ir_automation import FPATH_LOG
 
 PATH_AUTO_EXPORT = Path(f'D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export')
 PATH_T_DRIVE = Path(f'T:\\tfarley\\RIR\\')
@@ -31,6 +32,17 @@ N_PRINT = 15
 
 PIXEL_COORDS = {}
 PIXEL_COORDS['record'] = (360, 55)
+
+logger = logging.getLogger(__name__)
+# logger.propagate = False
+fhandler = logging.FileHandler(FPATH_LOG)
+shandler = logging.StreamHandler()
+[i.setLevel('INFO') for i in [logger, fhandler, shandler]]
+formatter = logging.Formatter('%(asctime)s - %(message)s')
+fhandler.setFormatter(formatter)
+shandler.setFormatter(formatter)
+logger.addHandler(fhandler)
+logger.addHandler(shandler)
 
 def automate_research_ir():
 

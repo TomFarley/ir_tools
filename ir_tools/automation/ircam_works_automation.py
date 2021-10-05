@@ -10,8 +10,18 @@ import csv
 
 from ir_tools.automation.automation_tools import (click_mouse, get_fns_and_dirs, copy_files, copy_dir, delete_files_in_dir,
     read_shot_number, write_shot_number, mkdir)
+from ir_tools.automation.run_ir_automation import FPATH_LOG
 
 logger = logging.getLogger(__name__)
+# logger.propagate = False
+fhandler = logging.FileHandler(FPATH_LOG)
+shandler = logging.StreamHandler()
+[i.setLevel('INFO') for i in [logger, fhandler, shandler]]
+formatter = logging.Formatter('%(asctime)s - %(message)s')
+fhandler.setFormatter(formatter)
+shandler.setFormatter(formatter)
+logger.addHandler(fhandler)
+logger.addHandler(shandler)
 
 
 # shot_number = 44103
@@ -71,12 +81,12 @@ def export_movie(shot_number, camera, check_unarmed=True):
     if check_unarmed:
         for i in np.arange(n_try+1):
             armed, _ = check_camera_armed()
-            if armed:
+            if not armed:
                 break
             else:
                 logger.info(f'IRcam {camera} camera is still armed after shot - Waiting {t_wait} s to check again')
                 time.sleep(t_wait)
-        if not armed:
+        if armed:
             logger.warning(f'IRcam {camera} camera is still armed after shot - not exporting RAW data')
             return False
 
