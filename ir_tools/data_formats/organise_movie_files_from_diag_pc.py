@@ -563,7 +563,7 @@ def convert_ats_files_archive_to_ipx(pulses=None, path_in=None, date=None, copy_
 
 if __name__ == '__main__':
     # copy_raw_files_from_staging_area(write_ipx=True, date=-3)
-    copy_raw_files_from_staging_area(write_ipx=True, date='2021-10-01')
+    copy_raw_files_from_staging_area(write_ipx=True, date='2021-09-28')
     # convert_raw_files_archive_to_ipx(path=Path('~/data/movies/mast_u/44777/rit/').expanduser())
 
     # path_ats = '~/data/movies/mast_u/rir_ats_files/{date}'
