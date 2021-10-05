@@ -402,8 +402,8 @@ def check_date(auto_export_paths, freia_export_paths, active_cameras):
                     empty_auto_export(path)
         for camera, path in freia_export_paths.items():
             if active_cameras.get(camera, False):
-                path_export_today = (path / date_str).resolve()
-                success, created = mkdir(path_export_today)
+                path_export_today = (path / date_str)  # .resolve()
+                success, created = mkdir(path_export_today, parents=False)
                 paths_today[f'{camera}_freia'] = path_export_today
 
     return date_str, paths_today
