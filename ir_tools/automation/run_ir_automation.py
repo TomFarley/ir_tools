@@ -159,7 +159,7 @@ def automate_ir_cameras(active_cameras=()):
 
         if (dt_shot >= 0):
             if (loop_cnt % LOOP_COUNT_UPDATE == 0) or (dt_shot < 7):
-                logger.info(f'Shot expected in dt: {dt_shot:0.1f} s')
+                logger.info(f'Shot {shot} expected in dt: {dt_shot:0.1f} s')
 
             if (dt_shot <= TIME_RECORD_PRE_SHOT) and (not recording):
                 if protection_active:

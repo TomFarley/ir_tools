@@ -18,6 +18,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
+logger.setLevel(logging.INFO)
 
 YES = '✓'
 NO = '✕'
