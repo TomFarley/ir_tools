@@ -50,6 +50,10 @@ PIXEL_COORDS_IMAGE = {'LWIR1': (580, 766),  # Record button
                       'MWIR1': (360, 155),  # Top left window, record button at (360, 55)
                       'Px_protection': (1465, 155),  # Top right window
                       'SW_beam_dump': (1465, 955)}  # Bottom right window
+IRCAM_CAMERAS = ['LWIR1', 'LWIR2', 'MWIR3']
+FLIR_CAMERAS = ['MWIR1', 'MWIR2']
+PROTECTION_CAMERAS = ['Px_protection', 'SW_beam_dump']
+
 BARS = '='*10
 
 logger = logging.getLogger(__name__)
@@ -68,6 +72,10 @@ def automate_ir_cameras(active_cameras=()):
     if len(active_cameras) == 0:
         raise ValueError('No active cameras')
 
+    protection_active = np.any([active for camera, active in active_cameras.items() if camera in PROTECTION_CAMERAS])
+    ircam_active = np.any([active for camera, active in active_cameras.items() if camera in IRCAM_CAMERAS])
+    flir_active = np.any([active for camera, active in active_cameras.items() if camera in FLIR_CAMERAS])
+
     logger.info(
         f'Starting camera automation for cameras: '
         f'{", ".join([camera for camera, active in active_cameras.items() if active])}')
@@ -82,7 +90,7 @@ def automate_ir_cameras(active_cameras=()):
     if FPATH_MSG_LOG.is_file():
         logger.info(f'Watching daproxy log file: {FPATH_MSG_LOG}')
     else:
-        raise FileNotFoundError(f'DAProxy log file doesn not exist: {FPATH_MSG_LOG}')
+        raise FileNotFoundError(f'DAProxy log file doesn\'t not exist: {FPATH_MSG_LOG}')
 
     shot, state = get_shot(fn=FPATH_MSG_LOG), get_state(fn=FPATH_MSG_LOG)
     logger.info(f'{BARS} Ready for shot {shot+1} in state "{state}" {BARS}')
@@ -154,21 +162,22 @@ def automate_ir_cameras(active_cameras=()):
                 logger.info(f'Shot expected in dt: {dt_shot:0.1f} s')
 
             if (dt_shot <= TIME_RECORD_PRE_SHOT) and (not recording):
-                logger.info(
-                    f'Starting protection cameras recording {TIME_RECORD_PRE_SHOT:0.1f}s before shot for {TIME_DURATION_RECORD:0.1f}s')
-                # Start recording protection views
-                if active_cameras['Px_protection']:
-                    flir_researchir_automation.start_recording_research_ir(PIXEL_COORDS_IMAGE['Px_protection'], 'Px_protection')
-                if active_cameras['SW_beam_dump']:
-                    flir_researchir_automation.start_recording_research_ir(PIXEL_COORDS_IMAGE['SW_beam_dump'], 'SW_beam_dump')
-                recording = True
+                if protection_active:
+                    logger.info(
+                        f'Starting protection cameras recording {TIME_RECORD_PRE_SHOT:0.1f}s before shot for {TIME_DURATION_RECORD:0.1f}s')
+                    # Start recording protection views
+                    if active_cameras['Px_protection']:
+                        flir_researchir_automation.start_recording_research_ir(PIXEL_COORDS_IMAGE['Px_protection'], 'Px_protection')
+                    if active_cameras['SW_beam_dump']:
+                        flir_researchir_automation.start_recording_research_ir(PIXEL_COORDS_IMAGE['SW_beam_dump'], 'SW_beam_dump')
+                    recording = True
 
             else:
                 # TIME_RECORD_PRE_SHOT before shot
                 armed = automation_tools.arm_scientific_cameras(active_cameras, armed, pixel_coords_image=PIXEL_COORDS_IMAGE)
 
 
-        elif (dt_recording_finished >= 0):
+        elif (dt_recording_finished >= 0) and protection_active:
             if (loop_cnt % LOOP_COUNT_UPDATE == 0) or (dt_recording_finished < 2):
                 logger.info(f'Recording should finish in dt: {dt_recording_finished:0.1f} s')
 
@@ -177,7 +186,7 @@ def automate_ir_cameras(active_cameras=()):
             recording = False
             shot_recorded_last = shot
 
-            for camera in ('LWIR1', 'LWIR2', 'MWIR3'):
+            for camera in IRCAM_CAMERAS:
                 if active_cameras.get(camera, False):
                     ircam_works_automation.export_movie(shot_number=shot, camera=camera, check_unarmed=True)
 
