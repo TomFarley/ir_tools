@@ -9,7 +9,7 @@ from ir_tools.automation.automation_tools import (click_mouse, move_mouse, get_f
                                                   delete_files_in_dir, read_shot_number, write_shot_number,
                                                   filenames_in_dir, mkdir)
 from ir_tools.automation import automation_tools
-from ir_tools.automation.run_ir_automation import FPATH_LOG
+from ir_tools.automation.automation_settings import FPATH_LOG
 
 PATH_AUTO_EXPORT = Path(f'D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export')
 PATH_T_DRIVE = Path(f'T:\\tfarley\\RIR\\')

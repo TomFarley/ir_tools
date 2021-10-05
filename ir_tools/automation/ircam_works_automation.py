@@ -1,16 +1,14 @@
 """Old automation script before DAproxy log available - uses pulse number csv file via freia/T drive mapping"""
 
-import os, shutil, logging
+import logging
 import time 
 import numpy as np
 from datetime import datetime
-from copy import copy
 from pathlib import Path
-import csv
 
 from ir_tools.automation.automation_tools import (click_mouse, get_fns_and_dirs, copy_files, copy_dir, delete_files_in_dir,
     read_shot_number, write_shot_number, mkdir)
-from ir_tools.automation.run_ir_automation import FPATH_LOG
+from ir_tools.automation.automation_settings import FPATH_LOG, PATH_HDD_OUT
 
 logger = logging.getLogger(__name__)
 # logger.propagate = False
@@ -29,7 +27,6 @@ logger.addHandler(shandler)
 # path_hdd_out = 'D:\\IRVB\\2021-05-20'
 date_str = datetime.now().strftime('%Y-%m-%d')
 
-PATH_HDD_OUT = Path(r'D:\\MAST-U\LWIR_IRCAM1_HM04-A\Operations\To_be_exported')
 path_auto_export = Path(f'D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export')
 path_auto_export_backup = Path(f'D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export_backup')
 path_t_drive = Path(f'T:\\tfarley\\RIT\\')
@@ -160,7 +157,6 @@ def start_recording_ircam_works(pixel_coords_record, armed=None, logger=None):
     return armed
 
 def auto_trigger(path_hdd_out):
-    import clipboard
     from pynput.keyboard import Key, Controller
     keyboard = Controller()
 

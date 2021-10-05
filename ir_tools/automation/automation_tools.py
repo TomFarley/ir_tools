@@ -11,19 +11,11 @@ import os, re
 import shutil
 import time
 from datetime import datetime
-from typing import Union, Iterable, Sequence, Tuple, Optional, Any, Dict
+from typing import Iterable, Optional, Any
 from pathlib import Path
 
 import numpy as np
-
-IRCAM_CAMERAS = ['LWIR1', 'LWIR2', 'MWIR3']
-FLIR_CAMERAS = ['MWIR1', 'MWIR2']
-PROTECTION_CAMERAS = ['Px_protection', 'SW_beam_dump']
-
-FPATH_LOG = Path('IR_automation.log')
-
-YES = '✓'
-NO = '✕'
+from ir_tools.automation.automation_settings import IRCAM_CAMERAS, FLIR_CAMERAS, PROTECTION_CAMERAS, FPATH_LOG, YES, NO
 
 logger = logging.getLogger(__name__)
 fhandler = logging.FileHandler(FPATH_LOG)
