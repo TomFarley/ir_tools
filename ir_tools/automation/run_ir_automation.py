@@ -192,11 +192,12 @@ def automate_ir_cameras(active_cameras=()):
 
             for camera, active in active_cameras.items():
                 if active:
-                    n_files[camera] = automation_tools.organise_new_movie_file(PATHS_AUTO_EXPORT[camera], FNS_FORMAT_MOVIE[camera], shot,
-                                                              path_export_today=paths_today[camera],
-                                                              n_file_prev=n_files[camera],
-                                                              t_shot_change=times['shot_change'],
-                                                              camera=camera, path_freia_export=)
+                    n_files[camera] = automation_tools.organise_new_movie_file(PATHS_AUTO_EXPORT[camera],
+                                                                               FNS_FORMAT_MOVIE[camera], shot,
+                                                  path_export_today=paths_today[camera],
+                                                  n_file_prev=n_files[camera], t_shot_change=times['shot_change'],
+                                                  camera=camera,
+                                                path_freia_export=paths_today.get(f'{camera}_freia', None))
                     armed[camera] = False
 
         if (dt_re_arm <= 0) or (state == 'PostShot'):
