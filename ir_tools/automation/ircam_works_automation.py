@@ -36,7 +36,7 @@ n_min_wait_post_pulse = 2
 
 # Mouse coords from top left (1920 x 1080) -> (860)
 # record_button_pixel_coords = np.array([500, 890], dtype=int) #  ??
-pixel_coords = {'record_button': [505, 766],  # [580, 766],  #  1920 x 1080, not full screen
+pixel_coords = {'record_button': [470, 766],  #  [505, 766],  # [580, 766],  #  1920 x 1080, not full screen
                 'file': [15, 32],
                 'export': [20, 170],
                 'int16_seq': [220, 220],
@@ -124,8 +124,6 @@ def start_recording_ircam_works(pixel_coords_record, armed=None, logger=None):
         armed, armed_fn = check_camera_armed(PATH_HDD_OUT)
 
     if not armed:
-        if logger is not None:
-            logger.info(f'Clicking record button at {tuple(pixel_coords_record)}')
 
         click_mouse(*tuple(pixel_coords_record))  # click record button
         keyboard.press(Key.ctrl)
@@ -136,7 +134,8 @@ def start_recording_ircam_works(pixel_coords_record, armed=None, logger=None):
 
         if not armed:
             if logger is not None:
-                logger.warning(f'FAILED to re-arm camera. Pressing F9 to try to arm camera')
+                logger.warning(f'Clicking record button at {tuple(pixel_coords_record)} FAILED to re-arm camera. '
+                               f'Pressing F9 to try to arm camera.')
 
             keyboard.press(Key.f9)
             time.sleep(1)

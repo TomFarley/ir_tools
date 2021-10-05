@@ -390,7 +390,7 @@ def empty_auto_export(path_auto_export):
     logger.info(f'Moved previously exported files to {path_auto_export_backup} from {path_auto_export}')
 
 
-def check_date(auto_export_paths):
+def check_date(auto_export_paths, freia_export_paths, active_cameras):
     date = datetime.now()
     date_str = date.strftime('%Y-%m-%d')
     paths_today = dict()
@@ -402,6 +402,11 @@ def check_date(auto_export_paths):
             paths_today[camera] = path_export_today
             if created:
                 empty_auto_export(path)
+        for camera, path in freia_export_paths.items():
+            if active_cameras.get(camera, False):
+                path_export_today = (path / date_str).resolve()
+                success, created = mkdir(path_export_today)
+                paths_today[f'{camera}_freia'] = path_export_today
 
     return date_str, paths_today
 
@@ -432,10 +437,12 @@ def arm_scientific_cameras(active_cameras, armed, pixel_coords_image):
     return armed
 
 
-def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export_today, n_file_prev, t_shot_change):
+def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export_today, n_file_prev, t_shot_change,
+                            camera, path_freia_export=None):
     fns_autosaved = filenames_in_dir(path_auto_export)
     fns_sorted, i_order, t_mod, ages, ages_sec = sort_files_by_age(fns_autosaved, path=path_auto_export)
     n_files = len(fns_sorted)
+    success = False
 
     saved_shots = shot_nos_from_fns(fns_sorted, pattern=fn_format_movie.format(shot='(\d+)'))
     if n_files == n_file_prev:
@@ -458,19 +465,33 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
                     path_fn_new = path_fn_expected
                     if not path_fn_expected.is_file():
                         logger.warning(f'File rename failed')
+                    else:
+                        success = True
                 else:
                     logger.warning(f'>>>> Expected shot no file already exists: {path_fn_expected.name}. '
                                    f'Not sure how to rename {fn_new}\nPulses saved: {saved_pulses} <<<<')
+                    success = False
+
             else:
                 logger.warning(f'>>>> Newest file is older than time of change to latest shot number.'
-                'File created at {t_mod_fn_new}. Shot state change at {t_shot_change}. dt={dt_file_since_shot_change} < 0 <<<<')
-        if path_fn_new.is_file():
+                f'File created at {t_mod_fn_new}. Shot state change at {t_shot_change}. '
+                               f'dt={dt_file_since_shot_change} < 0 <<<<')
+                success = False
+        if success and path_fn_new.is_file():
             dest = path_export_today / path_fn_new.name
             path_fn_new.rename(dest)
             logger.info(f'Moved latest file to {dest.parent} to preserve creation history')
 
             path_fn_new.write_bytes(dest.read_bytes())  # for binary files
-            logger.info(f'Coppied new movie file back to {path_fn_new}')
+            logger.info(f'Copied new movie file back to {path_fn_new}')
+
+            if (path_freia_export is not None) and (camera not in PROTECTION_CAMERAS):
+                dest = path_freia_export / path_fn_new.name
+                path_fn_new.rename(dest)
+                logger.info(f'Moved latest file to {dest.parent} to preserve creation history')
+
+                path_fn_new.write_bytes(dest.read_bytes())  # for binary files
+                logger.info(f'Copied new movie file back to {path_fn_new}')
         else:
             logger.warning(f'New file does not exist: {path_fn_new}')
     return n_files
