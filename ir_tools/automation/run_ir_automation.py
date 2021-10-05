@@ -18,6 +18,7 @@ import numpy as np
 from ir_tools.automation import automation_tools, daproxy, flir_researchir_automation, ircam_works_automation
 from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot, get_state
 from ir_tools.automation.automation_tools import make_iterable
+from ir_tools.automation.automation_tools import IRCAM_CAMERAS, FLIR_CAMERAS, PROTECTION_CAMERAS
 
 PATHS_AUTO_EXPORT = {'LWIR1': Path('D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export\\'),
                      'MWIR1': Path('D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export\\'),
@@ -52,9 +53,6 @@ PIXEL_COORDS_IMAGE = {'LWIR1': (580, 766),  # Record button
                       'MWIR1': (360, 155),  # Top left window, record button at (360, 55)
                       'Px_protection': (1465, 155),  # Top right window
                       'SW_beam_dump': (1465, 955)}  # Bottom right window
-IRCAM_CAMERAS = ['LWIR1', 'LWIR2', 'MWIR3']
-FLIR_CAMERAS = ['MWIR1', 'MWIR2']
-PROTECTION_CAMERAS = ['Px_protection', 'SW_beam_dump']
 
 BARS = '='*10
 
@@ -117,9 +115,9 @@ def automate_ir_cameras(active_cameras=()):
     while True:
         loop_cnt += 1
         t_now = datetime.datetime.now()
-        shot, state, times, shot_updated, state_updafted = daproxy.update_state_and_shot(FPATH_MSG_LOG, shot, state, times)
+        shot, state, times, shot_updated, state_updated = daproxy.update_state_and_shot(FPATH_MSG_LOG, shot, state, times)
 
-        if ((t_now.time() > START_TIME) and (t_now.time() < STOP_TIME)) and (t_now.weekday() <= 5) or state_updafted:
+        if ((t_now.time() > START_TIME) and (t_now.time() < STOP_TIME)) and (t_now.weekday() <= 5) or state_updated:
             if state in ('PreShot', 'Trigger'):
                 time.sleep(TIME_REFRESH_MAIN_LOOP_PRESHOT)
             else:
@@ -160,7 +158,7 @@ def automate_ir_cameras(active_cameras=()):
         # logger.info(f't_shot_expected: {times.get("shot_expected")}')
 
         if (dt_shot >= 0):
-            if (loop_cnt % LOOP_COUNT_UPDATE == 0) or (dt_shot < 7):
+            if (protection_active and (loop_cnt % LOOP_COUNT_UPDATE == 0) or (dt_shot < 7)) or state_updated:
                 logger.info(f'Shot {shot} expected in dt: {dt_shot:0.1f} s')
 
             if (dt_shot <= TIME_RECORD_PRE_SHOT) and (not recording):

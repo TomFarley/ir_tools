@@ -14,11 +14,16 @@ from datetime import datetime
 from typing import Union, Iterable, Sequence, Tuple, Optional, Any, Dict
 from pathlib import Path
 
+from ir_tools.automation.run_ir_automation import logger
+
 import numpy as np
 
-logger = logging.getLogger(__name__)
-logger.propagate = False
-logger.setLevel(logging.INFO)
+# logger = logging.getLogger(__name__)
+# logger.setLevel(logging.INFO)
+
+IRCAM_CAMERAS = ['LWIR1', 'LWIR2', 'MWIR3']
+FLIR_CAMERAS = ['MWIR1', 'MWIR2']
+PROTECTION_CAMERAS = ['Px_protection', 'SW_beam_dump']
 
 YES = '✓'
 NO = '✕'
@@ -404,18 +409,18 @@ def sigint_handler(proc_da_proxy):
 
 
 def arm_scientific_cameras(active_cameras, armed, pixel_coords_image):
-    camera = 'MWIR1'
-    if active_cameras.get(camera, False) and (not armed.get(camera, False)):
-        from ir_tools.automation.flir_researchir_automation import start_recording_research_ir
-        logger.info(f'Re-arming {camera}')
-        start_recording_research_ir(pixel_coords_image[camera], camera=camera)
-        armed[camera] = True
-    camera = 'LWIR1'
-    if active_cameras.get(camera, False) and (not armed.get(camera, False)):
-        from ir_tools.automation.ircam_works_automation import start_recording_ircam_works
-        logger.info('Re-arming LWIR1')
-        armed[camera] = start_recording_ircam_works(pixel_coords_record=pixel_coords_image[camera],
-                                                    armed=armed.get(camera, False), logger=logger)
+    for camera in FLIR_CAMERAS:
+        if active_cameras.get(camera, False) and (not armed.get(camera, False)):
+            from ir_tools.automation.flir_researchir_automation import start_recording_research_ir
+            logger.info(f'Re-arming {camera}')
+            start_recording_research_ir(pixel_coords_image[camera], camera=camera)
+            armed[camera] = True
+    for camera in IRCAM_CAMERAS:
+        if active_cameras.get(camera, False) and (not armed.get(camera, False)):
+            from ir_tools.automation.ircam_works_automation import start_recording_ircam_works
+            logger.info('Re-arming {camera')
+            armed[camera] = start_recording_ircam_works(pixel_coords_record=pixel_coords_image[camera],
+                                                        armed=armed.get(camera, False), logger=logger)
     return armed
 
 
