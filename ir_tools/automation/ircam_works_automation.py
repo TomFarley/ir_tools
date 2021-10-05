@@ -43,7 +43,7 @@ n_min_wait_post_pulse = 2
 
 # Mouse coords from top left (1920 x 1080) -> (860)
 # record_button_pixel_coords = np.array([500, 890], dtype=int) #  ??
-pixel_coords = {'record_button': [420, 766],  #  [505, 766],  # [580, 766],  #  1920 x 1080, not full screen
+pixel_coords = {'record_button': [500, 766],  #  [505, 766],  # [580, 766],  #  1920 x 1080, not full screen
                 'file': [15, 32],
                 'export': [20, 170],
                 'int16_seq': [220, 220],
@@ -61,6 +61,7 @@ def check_for_armed_file(fns):
     for fn in fns:
         if '.space' in fn:
             armed = True
+            armed_fn = fn
             # print(f'Camera IS in armed state ({fn})')
             break
     else:
@@ -77,7 +78,7 @@ def export_movie(shot_number, camera, check_unarmed=True):
     n_try = 5
     if check_unarmed:
         for i in np.arange(n_try+1):
-            armed, _ = check_camera_armed()
+            armed, _ = check_camera_armed(path_hdd_out=PATH_HDD_OUT)
             if not armed:
                 break
             else:
@@ -128,16 +129,16 @@ def start_recording_ircam_works(pixel_coords_record, armed=None, logger=None):
     keyboard = Controller()
 
     if armed is None:
-        armed, armed_fn = check_camera_armed(PATH_HDD_OUT)
+        armed, armed_fn = check_camera_armed(path_hdd_out=PATH_HDD_OUT)
 
     if not armed:
 
         click_mouse(*tuple(pixel_coords_record))  # click record button
         keyboard.press(Key.ctrl)
         keyboard.release(Key.ctrl)
-        time.sleep(1)
+        time.sleep(2)
 
-        armed, armed_fn = check_camera_armed(PATH_HDD_OUT)
+        armed, armed_fn = check_camera_armed(path_hdd_out=PATH_HDD_OUT)
 
         if not armed:
             if logger is not None:
@@ -146,7 +147,7 @@ def start_recording_ircam_works(pixel_coords_record, armed=None, logger=None):
 
             keyboard.press(Key.f9)
             time.sleep(1)
-            armed, armed_fn = check_camera_armed(PATH_HDD_OUT)
+            armed, armed_fn = check_camera_armed(path_hdd_out=PATH_HDD_OUT)
 
             if logger is not None:
                 if armed:

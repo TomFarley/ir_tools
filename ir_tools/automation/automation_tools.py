@@ -206,10 +206,13 @@ def move_mouse(x, y):
     win32api.mouse_event(win32con.MOUSEEVENTF_MOVE | win32con.MOUSEEVENTF_ABSOLUTE, x, y, 0, 0)
 
 
-def get_fns_and_dirs(path_hdd_out):
+def get_fns_and_dirs(path):
     """Return all filenames and dirnames recursively from path"""
+    if not Path(path).is_dir():
+        raise FileNotFoundError(f'Path does not exist: {path}')
+
     fns = []
-    for i, (dirpath, dirnames, filenames) in enumerate(os.walk(path_hdd_out)):
+    for i, (dirpath, dirnames, filenames) in enumerate(os.walk(path)):
         fns.append(filenames)
         if i == 0:
             dirs_top = dirnames
