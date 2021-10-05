@@ -178,7 +178,7 @@ def automate_ir_cameras(active_cameras=()):
             shot_recorded_last = shot
 
             for camera in ('LWIR1', 'LWIR2', 'MWIR3'):
-                if active.get(camera, False):
+                if active_cameras.get(camera, False):
                     ircam_works_automation.export_movie(shot_number=shot, camera=camera, check_unarmed=True)
 
             for camera, active in active_cameras.items():
