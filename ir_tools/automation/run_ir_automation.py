@@ -25,7 +25,8 @@ PATHS_AUTO_EXPORT = {'LWIR1': Path('D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\
                      'Px_protection': Path('D:\\FLIR_AX5_Protection_data\\PX Coil Tail\\auto_export\\'),
                      'SW_beam_dump': Path('D:\\FLIR_AX5_Protection_data\\SW_beam_dump\\auto_export\\')}
 PATH_T_DRIVE = Path(f'T:\\tfarley\\RIR\\')
-PATH_FREIA = Path('H:\\data\\movies\\diagnostic_pc_transfer\\rir\\')
+PATHS_FREIA_EXPORT = {'MWIR1': Path('H:\\data\\movies\\diagnostic_pc_transfer\\rir\\'),
+                      'LWIR1': Path('H:\\data\\movies\\diagnostic_pc_transfer\\rit\\')}
 
 FNS_FORMAT_MOVIE = {'LWIR1': '{shot}.RAW',
                     'MWIR1': '{shot}.ats',
@@ -98,7 +99,8 @@ def automate_ir_cameras(active_cameras=()):
         if active:
             auto_export_paths[camera] = PATHS_AUTO_EXPORT[camera]
 
-    date_str, paths_today = automation_tools.check_date(auto_export_paths=auto_export_paths)
+    date_str, paths_today = automation_tools.check_date(auto_export_paths=PATHS_AUTO_EXPORT,
+                                                        freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras)
 
     armed = automation_tools.arm_scientific_cameras(active_cameras, armed={}, pixel_coords_image=PIXEL_COORDS_IMAGE)
 
@@ -193,7 +195,8 @@ def automate_ir_cameras(active_cameras=()):
                     n_files[camera] = automation_tools.organise_new_movie_file(PATHS_AUTO_EXPORT[camera], FNS_FORMAT_MOVIE[camera], shot,
                                                               path_export_today=paths_today[camera],
                                                               n_file_prev=n_files[camera],
-                                                              t_shot_change=times['shot_change'])
+                                                              t_shot_change=times['shot_change'],
+                                                              camera=camera, path_freia_export=)
                     armed[camera] = False
 
         if (dt_re_arm <= 0) or (state == 'PostShot'):
