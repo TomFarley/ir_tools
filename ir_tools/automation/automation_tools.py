@@ -14,19 +14,26 @@ from datetime import datetime
 from typing import Union, Iterable, Sequence, Tuple, Optional, Any, Dict
 from pathlib import Path
 
-from ir_tools.automation.run_ir_automation import logger
-
 import numpy as np
-
-# logger = logging.getLogger(__name__)
-# logger.setLevel(logging.INFO)
 
 IRCAM_CAMERAS = ['LWIR1', 'LWIR2', 'MWIR3']
 FLIR_CAMERAS = ['MWIR1', 'MWIR2']
 PROTECTION_CAMERAS = ['Px_protection', 'SW_beam_dump']
 
+FPATH_LOG = Path('IR_automation.log')
+
 YES = '✓'
 NO = '✕'
+
+logger = logging.getLogger(__name__)
+fhandler = logging.FileHandler(FPATH_LOG)
+shandler = logging.StreamHandler()
+[i.setLevel('INFO') for i in [logger, fhandler, shandler]]
+formatter = logging.Formatter('%(asctime)s - %(message)s')
+fhandler.setFormatter(formatter)
+shandler.setFormatter(formatter)
+logger.addHandler(fhandler)
+logger.addHandler(shandler)
 
 def make_iterable(obj: Any, ndarray: bool = False,
                   cast_to: Optional[type] = None,
@@ -77,6 +84,7 @@ def make_iterable(obj: Any, ndarray: bool = False,
     return obj
 
 def check_freia_access():
+
     # check if network drive is mounted
     FPATH_FREIA = 'H:/'
     if os.path.ismount(FPATH_FREIA):
@@ -142,7 +150,7 @@ def update_next_shot_file(shot_no_next, fn_shot='~/ccfepc/T/tfarley/next_mast_u_
             try:
                 organise_ircam_raw_files(path_in=path_in, camera_settings=camera_settings, n_files=1, write_ipx=True)
             except OSError as e:
-                logger.warning(f'Failed to organise IRam raw files: {e}')
+                logger.warning(f'Failed to organise IRcam raw files: {e}')
 
         if organise_flir_ats:
             from fire.scripts.organise_ircam_raw_files import convert_ats_files_archive_to_ipx
