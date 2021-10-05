@@ -487,14 +487,24 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
 
             path_fn_new.write_bytes(dest.read_bytes())  # for binary files
             logger.info(f'Copied new movie file back to {path_fn_new}')
+            time.sleep(0.5)
 
             if (path_freia_export is not None) and (camera not in PROTECTION_CAMERAS):
                 dest = path_freia_export / path_fn_new.name
-                path_fn_new.rename(dest)
-                logger.info(f'Moved latest file to {dest.parent} to preserve creation history')
 
-                path_fn_new.write_bytes(dest.read_bytes())  # for binary files
-                logger.info(f'Copied new movie file back to {path_fn_new}')
+                try:
+                    path_fn_new.rename(dest)
+                    logger.info(f'Moved latest file to {dest.parent} to preserve creation history')
+
+                    path_fn_new.write_bytes(dest.read_bytes())  # for binary files
+                    logger.info(f'Copied new movie file back to {path_fn_new}')
+                except OSError as e:
+                    logger.warning(f'Failed to move file to {path_freia_export}')
+                    try:
+                        path_fn_new.write_bytes(dest.read_bytes())  # for binary files
+                        logger.info(f'Copied new movie file back to {path_fn_new}')
+                    except Exception as e:
+                        logger.warning(f'Failed to copy file to {path_freia_export}')
         else:
             logger.warning(f'New file does not exist: {path_fn_new}')
     return n_files

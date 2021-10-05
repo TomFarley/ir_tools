@@ -36,7 +36,7 @@ n_min_wait_post_pulse = 2
 
 # Mouse coords from top left (1920 x 1080) -> (860)
 # record_button_pixel_coords = np.array([500, 890], dtype=int) #  ??
-pixel_coords = {'record_button': [470, 766],  #  [505, 766],  # [580, 766],  #  1920 x 1080, not full screen
+pixel_coords = {'record_button': [420, 766],  #  [505, 766],  # [580, 766],  #  1920 x 1080, not full screen
                 'file': [15, 32],
                 'export': [20, 170],
                 'int16_seq': [220, 220],
