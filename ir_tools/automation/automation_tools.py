@@ -444,8 +444,11 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
 
         # TODO: Compare time of shot change to time of file creation
         if (shot_fn_new != shot):
-            dt_file_since_shot_change = (t_mod_fn_new-t_shot_change).total_seconds()
-            if dt_file_since_shot_change > 0:
+            if t_shot_change is not None:
+                dt_file_since_shot_change = (t_mod_fn_new-t_shot_change).total_seconds()
+            else:
+                dt_file_since_shot_change = None
+            if (dt_file_since_shot_change is None) or (dt_file_since_shot_change >= 0):
                 fn_expected = fn_format_movie.format(shot=f'0{shot}')
                 path_fn_expected = path_auto_export / fn_expected
                 if not path_fn_expected.is_file():
@@ -491,8 +494,10 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
                         logger.info(f'Copied new movie file back to {path_fn_new}')
                     except Exception as e:
                         logger.warning(f'Failed to copy file to {path_freia_export}')
+        elif not success:
+            logger.warning(f'Didnt copy file as rename success = {success}')
         else:
-            logger.warning(f'New file does not exist: {path_fn_new}')
+            logger.warning(f'New file does not exist: {path_fn_new}. Rename success = {success}')
     return n_files
 
 

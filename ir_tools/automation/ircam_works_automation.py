@@ -88,6 +88,11 @@ def export_movie(shot_number, camera, check_unarmed=True):
             logger.warning(f'IRcam {camera} camera is still armed after shot - not exporting RAW data')
             return False
 
+    fn_out = '{shot_number}.RAW'
+    path_fn_out = Path(path_auto_export) / fn_out
+    if path_fn_out.is_file():
+        logger.warning(f'File to be exported already exists. Overwriting: {path_fn_out}')
+
     clipboard.copy(str(shot_number))
     
     click_mouse(*tuple(pixel_coords['file']))
@@ -109,11 +114,12 @@ def export_movie(shot_number, camera, check_unarmed=True):
     time.sleep(0.5)
     keyboard.press(Key.enter)
     time.sleep(3)
-    fns, dirs = get_fns_and_dirs(path_auto_export)
-    if f'{shot_number}.RAW' in fns:
-        logger.info(f'Exported current {camera} movie to {shot_number}.RAW')
+
+    if path_fn_out.is_file():
+        logger.info(f'Exported current {camera} movie to {path_fn_out} (file confirmed to exist)')
         return True
     else:
+        fns = get_fns_and_dirs(path_auto_export)
         print(f'Failed to export {camera} RAW movie to {path_auto_export}: {fns}')
         return False
 
