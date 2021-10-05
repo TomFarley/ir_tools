@@ -168,7 +168,7 @@ def automate_ir_cameras(active_cameras=()):
                         flir_researchir_automation.start_recording_research_ir(PIXEL_COORDS_IMAGE['Px_protection'], 'Px_protection')
                     if active_cameras['SW_beam_dump']:
                         flir_researchir_automation.start_recording_research_ir(PIXEL_COORDS_IMAGE['SW_beam_dump'], 'SW_beam_dump')
-                    recording = True
+                recording = True
 
             else:
                 # TIME_RECORD_PRE_SHOT before shot
