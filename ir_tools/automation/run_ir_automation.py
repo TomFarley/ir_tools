@@ -10,50 +10,17 @@ Date: Sept 2021
 """
 
 import logging, signal, time, datetime, os
-from typing import Union, Iterable, Sequence, Tuple, Optional, Any, Dict
-from pathlib import Path
 
 import numpy as np
 
 from ir_tools.automation import automation_tools, daproxy, flir_researchir_automation, ircam_works_automation
+from ir_tools.automation.automation_settings import (PATHS_AUTO_EXPORT, PATHS_FREIA_EXPORT, FNS_FORMAT_MOVIE,
+                                                     AUTOMATE_DAPROXY, TIME_REFRESH_MAIN_LOOP_OPS,
+                                                     TIME_REFRESH_MAIN_LOOP_PRESHOT, TIME_REFRESH_MAIN_LOOP_NON_OPS,
+                                                     TIME_RECORD_PRE_SHOT, LOOP_COUNT_UPDATE, STOP_TIME, START_TIME,
+                                                     PIXEL_COORDS_IMAGE, IRCAM_CAMERAS, FLIR_CAMERAS,
+                                                     PROTECTION_CAMERAS, FPATH_LOG, BARS)
 from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot, get_state
-from ir_tools.automation.automation_tools import make_iterable
-from ir_tools.automation.automation_tools import IRCAM_CAMERAS, FLIR_CAMERAS, PROTECTION_CAMERAS, FPATH_LOG
-
-PATHS_AUTO_EXPORT = {'LWIR1': Path('D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export\\'),
-                     'MWIR1': Path('D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export\\'),
-                     'Px_protection': Path('D:\\FLIR_AX5_Protection_data\\PX Coil Tail\\auto_export\\'),
-                     'SW_beam_dump': Path('D:\\FLIR_AX5_Protection_data\\SW_beam_dump\\auto_export\\')}
-PATH_T_DRIVE = Path(f'T:\\tfarley\\RIR\\')
-PATHS_FREIA_EXPORT = {'MWIR1': Path('H:\\data\\movies\\diagnostic_pc_transfer\\rir\\'),
-                      'LWIR1': Path('H:\\data\\movies\\diagnostic_pc_transfer\\rit\\')}
-
-FNS_FORMAT_MOVIE = {'LWIR1': '{shot}.RAW',
-                    'MWIR1': '{shot}.ats',
-                    'Px_protection': '{shot}.seq',  # shot=(\d+) for regex match
-                    'SW_beam_dump': '{shot}.seq'}
-
-AUTOMATE_DAPROXY = True
-
-TIME_REFRESH_MAIN_LOOP_OPS = 25  # sec. The MAST-U Abort state seems to only last for ~10s
-TIME_REFRESH_MAIN_LOOP_PRESHOT = 1  # sec. The MAST-U Abort state seems to only last for ~10s
-TIME_REFRESH_MAIN_LOOP_NON_OPS = 10*60  # sec. The MAST-U Abort state seems to only last for ~10s
-TIME_DELEY_PRESHOT = 105  # sec. PreShot comes ~2min before shot
-TIME_RECORD_PRE_SHOT = 6  # sec. How long before shot is expected to start recording
-TIME_DURATION_RECORD = 25  # sec. Duration of movie recording set in ResearchIR
-TIME_DELAY_REARM = 120  # sec. Time to wait for clock train to finish.
-TIME_TYPICAL_MIN_INTERSHOT = 3 * 60  # sec. Normally at least 3 min between shots
-
-LOOP_COUNT_UPDATE = 8  # loops. No point in updating this too often as Github pages site lag by ~20 min
-STOP_TIME = datetime.time(20, 10)
-START_TIME = datetime.time(7, 50)
-
-PIXEL_COORDS_IMAGE = {'LWIR1': (580, 766),  # Record button
-                      'MWIR1': (360, 155),  # Top left window, record button at (360, 55)
-                      'Px_protection': (1465, 155),  # Top right window
-                      'SW_beam_dump': (1465, 955)}  # Bottom right window
-
-BARS = '='*10
 
 logger = logging.getLogger(__name__)
 # logger.propagate = False
@@ -100,7 +67,7 @@ def automate_ir_cameras(active_cameras=()):
             auto_export_paths[camera] = PATHS_AUTO_EXPORT[camera]
 
     date_str, paths_today = automation_tools.check_date(auto_export_paths=PATHS_AUTO_EXPORT,
-                                                freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras)
+                                                        freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras)
 
     armed = automation_tools.arm_scientific_cameras(active_cameras, armed={}, pixel_coords_image=PIXEL_COORDS_IMAGE)
 
@@ -196,10 +163,10 @@ def automate_ir_cameras(active_cameras=()):
                 if active:
                     n_files[camera] = automation_tools.organise_new_movie_file(PATHS_AUTO_EXPORT[camera],
                                                                                FNS_FORMAT_MOVIE[camera], shot,
-                                                  path_export_today=paths_today[camera],
-                                                  n_file_prev=n_files[camera], t_shot_change=times['shot_change'],
-                                                  camera=camera,
-                                                path_freia_export=paths_today.get(f'{camera}_freia', None))
+                                                                               path_export_today=paths_today[camera],
+                                                                               n_file_prev=n_files[camera], t_shot_change=times['shot_change'],
+                                                                               camera=camera,
+                                                                               path_freia_export=paths_today.get(f'{camera}_freia', None))
                     armed[camera] = False
 
         if (dt_re_arm <= 0) or (state == 'PostShot'):
