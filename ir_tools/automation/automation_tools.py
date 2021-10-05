@@ -369,15 +369,6 @@ def write_shot_number(fn_shot, shot_number):
     else:
         print(f'{datetime.now()}: Wrote shot number {shot_number} to {fn_shot}')
 
-if __name__ == '__main__':
-    fn = '~/data/movies/diagnostic_pc_transfer/next_mast_u_shot_no.csv'
-    # fn = '~/ccfepc/T/tfarley/next_mast_u_shot_no.csv'
-    auto_update_next_shot_file(fn_shot=fn, t_refresh=0.25, t_delay=2.5, n_print=40, organise_ircam_raw=False,
-                               rit_intershot_job=True, rir_intershot_job=True)
-    # monitor_uda_latest_shot()
-    # update_next_shot_file(44140)
-
-
 def empty_auto_export(path_auto_export):
     path_auto_export_backup = (path_auto_export / '..' / 'auto_export_backup').resolve()
     mkdir(path_auto_export_backup)
@@ -471,9 +462,9 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
                     success = False
 
             else:
-                logger.warning(f'>>>> Newest file is older than time of change to latest shot number.'
-                f'File created at {t_mod_fn_new}. Shot state change at {t_shot_change}. '
-                               f'dt={dt_file_since_shot_change} < 0 <<<<')
+                logger.warning(f'>>>> Newest file is older than time of change to latest shot number. <<<<')
+                logger.warning(f'File created at {t_mod_fn_new}. Shot state change at {t_shot_change}. '
+                               f'dt={dt_file_since_shot_change:0.1f} < 0 ')
                 success = False
         if success and path_fn_new.is_file():
             dest = path_export_today / path_fn_new.name
@@ -503,3 +494,12 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
         else:
             logger.warning(f'New file does not exist: {path_fn_new}')
     return n_files
+
+
+if __name__ == '__main__':
+    fn = '~/data/movies/diagnostic_pc_transfer/next_mast_u_shot_no.csv'
+    # fn = '~/ccfepc/T/tfarley/next_mast_u_shot_no.csv'
+    auto_update_next_shot_file(fn_shot=fn, t_refresh=0.25, t_delay=2.5, n_print=40, organise_ircam_raw=False,
+                               rit_intershot_job=True, rir_intershot_job=True)
+    # monitor_uda_latest_shot()
+    # update_next_shot_file(44140)

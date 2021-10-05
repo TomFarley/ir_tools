@@ -15,7 +15,7 @@ import numpy as np
 
 from ir_tools.automation import automation_tools, daproxy, flir_researchir_automation, ircam_works_automation
 from ir_tools.automation.automation_settings import (PATHS_AUTO_EXPORT, PATHS_FREIA_EXPORT, FNS_FORMAT_MOVIE,
-                                                     AUTOMATE_DAPROXY, TIME_REFRESH_MAIN_LOOP_OPS,
+                                                     AUTOMATE_DAPROXY, TIME_REFRESH_MAIN_LOOP_OPS, TIME_DURATION_RECORD,
                                                      TIME_REFRESH_MAIN_LOOP_PRESHOT, TIME_REFRESH_MAIN_LOOP_NON_OPS,
                                                      TIME_RECORD_PRE_SHOT, LOOP_COUNT_UPDATE, STOP_TIME, START_TIME,
                                                      PIXEL_COORDS_IMAGE, IRCAM_CAMERAS, FLIR_CAMERAS,
