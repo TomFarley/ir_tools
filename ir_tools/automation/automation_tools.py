@@ -276,9 +276,19 @@ def mkdir(path, parents=True):
     if (not path.is_dir()):
         try:
             path.mkdir(exist_ok=True, parents=parents)
-        except FileExistsError as e:
+        # except FileExistsError as e:
+        #     print(f'Failed to create directory "{path}": {e}')
+        #     succes = False
+        except Exception as e:
             print(f'Failed to create directory "{path}": {e}')
-            succes = False
+            try:
+                os.makedirs(str(path))
+            except Exception as e:
+                print(f'Failed to create directory using os.mkdirs: "{path}": {e}')
+                success = False
+            else:
+                created = True
+                success = True
         else:
             print(f'Created new directory "{path}"')
             created = True
@@ -393,9 +403,14 @@ def check_date(auto_export_paths, freia_export_paths, active_cameras):
                     empty_auto_export(path)
         for camera, path in freia_export_paths.items():
             if active_cameras.get(camera, False):
-                path_export_today = (path / date_str)  # .resolve()
+                path_export_today = (Path(path) / date_str)  # .resolve()
                 success, created = mkdir(path_export_today, parents=False)
-                paths_today[f'{camera}_freia'] = path_export_today
+
+                if not success:
+                    success, created = mkdir(path_export_today.resolve(), parents=False)
+
+                if path_export_today.is_dir():
+                    paths_today[f'{camera}_freia'] = path_export_today
 
     return date_str, paths_today
 
