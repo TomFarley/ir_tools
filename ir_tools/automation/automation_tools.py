@@ -232,7 +232,8 @@ def filenames_in_dir(path):
     for (dirpath, dirnames, filenames) in os.walk(path):
         f.append(filenames)
         break
-    f = list(np.concatenate(f))
+    if len(f) > 0:
+        f = list(np.concatenate(f))
     return f
 
 def age_of_file(fn_path, path=None):
