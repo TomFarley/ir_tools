@@ -18,7 +18,7 @@ import numpy as np
 from ir_tools.automation import automation_tools, daproxy, flir_researchir_automation, ircam_works_automation
 from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot, get_state
 from ir_tools.automation.automation_tools import make_iterable
-from ir_tools.automation.automation_tools import IRCAM_CAMERAS, FLIR_CAMERAS, PROTECTION_CAMERAS
+from ir_tools.automation.automation_tools import IRCAM_CAMERAS, FLIR_CAMERAS, PROTECTION_CAMERAS, FPATH_LOG
 
 PATHS_AUTO_EXPORT = {'LWIR1': Path('D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export\\'),
                      'MWIR1': Path('D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export\\'),
@@ -33,8 +33,6 @@ FNS_FORMAT_MOVIE = {'LWIR1': '{shot}.RAW',
                     'SW_beam_dump': '{shot}.seq'}
 
 AUTOMATE_DAPROXY = True
-
-FPATH_LOG = Path('MWIR1_pc.log')
 
 TIME_REFRESH_MAIN_LOOP_OPS = 25  # sec. The MAST-U Abort state seems to only last for ~10s
 TIME_REFRESH_MAIN_LOOP_PRESHOT = 1  # sec. The MAST-U Abort state seems to only last for ~10s
