@@ -43,7 +43,7 @@ TIME_TYPICAL_MIN_INTERSHOT = 3 * 60  # sec. Normally at least 3 min between shot
 LOOP_COUNT_UPDATE = 8  # loops. No point in updating this too often as Github pages site lag by ~20 min
 STOP_TIME = datetime.time(20, 10)
 START_TIME = datetime.time(7, 50)
-PIXEL_COORDS_IMAGE = {'LWIR1': (580, 766),  # Record button
+PIXEL_COORDS_IMAGE = {'LWIR1': (500, 766),  # Record button
                       'MWIR1': (360, 155),  # Top left window, record button at (360, 55)
                       'Px_protection': (1465, 155),  # Top right window
                       'SW_beam_dump': (1465, 955)}  # Bottom right window

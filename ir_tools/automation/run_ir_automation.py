@@ -19,7 +19,7 @@ from ir_tools.automation.automation_settings import (PATHS_AUTO_EXPORT, PATHS_FR
                                                      TIME_REFRESH_MAIN_LOOP_PRESHOT, TIME_REFRESH_MAIN_LOOP_NON_OPS,
                                                      TIME_RECORD_PRE_SHOT, LOOP_COUNT_UPDATE, STOP_TIME, START_TIME,
                                                      PIXEL_COORDS_IMAGE, IRCAM_CAMERAS, FLIR_CAMERAS,
-                                                     PROTECTION_CAMERAS, FPATH_LOG)
+                                                     PROTECTION_CAMERAS, FPATH_LOG, BARS)
 from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot, get_state
 
 logger = logging.getLogger(__name__)
