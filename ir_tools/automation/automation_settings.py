@@ -25,7 +25,9 @@ PATHS_AUTO_EXPORT = {'LWIR1': Path('D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\
                      'Px_protection': Path('D:\\FLIR_AX5_Protection_data\\PX Coil Tail\\auto_export\\'),
                      'SW_beam_dump': Path('D:\\FLIR_AX5_Protection_data\\SW_beam_dump\\auto_export\\')}
 PATH_T_DRIVE = Path(f'T:\\tfarley\\RIR\\')
-PATHS_FREIA_EXPORT = {'MWIR1': Path('H:\\data\\movies\\diagnostic_pc_transfer\\rir\\'),
+PATHS_FREIA_EXPORT = {
+                    # 'MWIR1': Path('H:\\data\\movies\\diagnostic_pc_transfer\\rir\\'),  # \\samba-2.hpc.l\home
+                    'MWIR1': Path('\\\\samba-2.hpc.l\\home\\data\\movies\\diagnostic_pc_transfer\\rir\\'),  #
                       'LWIR1': Path('H:\\data\\movies\\diagnostic_pc_transfer\\rit\\')}
 FNS_FORMAT_MOVIE = {'LWIR1': '{shot}.RAW',
                     'MWIR1': '{shot}.ats',
