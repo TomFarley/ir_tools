@@ -66,15 +66,23 @@ def export_movie(shot_number, camera, check_unarmed=True):
     from pynput.keyboard import Key, Controller
     keyboard = Controller()
 
+    t_wait = 5
+    n_try = 5
     if check_unarmed:
-        armed, _ = check_camera_armed()
-    if not armed:
-        logger.warning(f'IRcam {camera} camera is still armed after shot - not exporting RAW data')
-        return False
+        for i in np.arange(n_try+1):
+            armed, _ = check_camera_armed()
+            if armed:
+                break
+            else:
+                logger.info(f'IRcam {camera} camera is still armed after shot - Waiting {t_wait} s to check again')
+                time.sleep(t_wait)
+        if not armed:
+            logger.warning(f'IRcam {camera} camera is still armed after shot - not exporting RAW data')
+            return False
 
     clipboard.copy(str(shot_number))
     
-    click(*tuple(pixel_coords['file']))
+    click_mouse(*tuple(pixel_coords['file']))
 
     for i in np.arange(8):
         keyboard.press(Key.down)
