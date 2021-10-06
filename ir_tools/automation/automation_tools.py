@@ -120,6 +120,7 @@ def auto_update_next_shot_file(fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.c
             break
         pass
 
+
 def update_next_shot_file(shot_no_next, fn_shot='~/ccfepc/T/tfarley/next_mast_u_shot_no.csv',
                           t_delay=0, organise_ircam_raw=False, organise_flir_ats=False,
                           rit_intershot_job=False, rir_intershot_job=False,

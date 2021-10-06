@@ -21,8 +21,6 @@ import matplotlib.pyplot as plt
 from ir_tools.automation import automation_tools
 
 logger = logging.getLogger(__name__)
-logger.propagate = False
-
 
 PATH_MSG_LOG = r'D:/mastda/DAProxy/log/'
 FNAME_MSG_LOG = f'prx{datetime.datetime.now().strftime("%y%m%d")}.log'
