@@ -24,14 +24,14 @@ from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot,
 
 logger = logging.getLogger(__name__)
 # logger.propagate = False
-fhandler = logging.FileHandler(FPATH_LOG)
-shandler = logging.StreamHandler()
-[i.setLevel('INFO') for i in [logger, fhandler, shandler]]
-formatter = logging.Formatter('%(asctime)s - %(message)s')
-fhandler.setFormatter(formatter)
-shandler.setFormatter(formatter)
-logger.addHandler(fhandler)
-logger.addHandler(shandler)
+# fhandler = logging.FileHandler(FPATH_LOG)
+# shandler = logging.StreamHandler()
+# [i.setLevel('INFO') for i in [logger, fhandler, shandler]]
+# formatter = logging.Formatter('%(asctime)s - %(message)s')
+# fhandler.setFormatter(formatter)
+# shandler.setFormatter(formatter)
+# logger.addHandler(fhandler)
+# logger.addHandler(shandler)
 
 def automate_ir_cameras(active_cameras=()):
     active_cameras = dict(active_cameras)

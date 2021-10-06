@@ -18,14 +18,14 @@ import numpy as np
 from ir_tools.automation.automation_settings import IRCAM_CAMERAS, FLIR_CAMERAS, PROTECTION_CAMERAS, FPATH_LOG, YES, NO
 
 logger = logging.getLogger(__name__)
-fhandler = logging.FileHandler(FPATH_LOG)
-shandler = logging.StreamHandler()
-[i.setLevel('INFO') for i in [logger, fhandler, shandler]]
-formatter = logging.Formatter('%(asctime)s - %(message)s')
-fhandler.setFormatter(formatter)
-shandler.setFormatter(formatter)
-logger.addHandler(fhandler)
-logger.addHandler(shandler)
+# fhandler = logging.FileHandler(FPATH_LOG)
+# shandler = logging.StreamHandler()
+# [i.setLevel('INFO') for i in [logger, fhandler, shandler]]
+# formatter = logging.Formatter('%(asctime)s - %(message)s')
+# fhandler.setFormatter(formatter)
+# shandler.setFormatter(formatter)
+# logger.addHandler(fhandler)
+# logger.addHandler(shandler)
 
 def make_iterable(obj: Any, ndarray: bool = False,
                   cast_to: Optional[type] = None,
