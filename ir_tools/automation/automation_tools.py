@@ -309,7 +309,7 @@ def copy_files(path_from, path_to, append_from_name=False, create_destination=Tr
     print(f'Copied {fns} from {path_from} to {path_to}')
     # time.sleep(1)
 
-def copy_file(path_fn_from, path_fn_to, append_from_name=False, create_destination=False):
+def copy_file(path_fn_from, path_fn_to, append_from_name=False, create_destination=False, verbose=True):
     if append_from_name or path_fn_to.is_dir():
         path_fn_to = path_fn_to / path_fn_from.name
 
@@ -323,11 +323,14 @@ def copy_file(path_fn_from, path_fn_to, append_from_name=False, create_destinati
     try:
         path_fn_to.write_bytes(path_fn_from.read_bytes())
     except FileNotFoundError as e:
-        logger.warning(f'\nFailed to copy file from {path_fn_from} to {path_fn_to}:\n{e}\n')
+        if verbose:
+            logger.warning(f'\nFailed to copy file from {path_fn_from} to {path_fn_to}:\n{e}\n')
     except PermissionError as e:
-        logger.warning(f'\nFailed to copy file from {path_fn_from} to {path_fn_to}:\n{e}\n')
+        if verbose:
+            logger.warning(f'\nFailed to copy file from {path_fn_from} to {path_fn_to}:\n{e}\n')
     except Exception as e:
-        logger.warning(f'\nFailed to copy file from {path_fn_from} to {path_fn_to}:\n{e}\n')
+        if verbose:
+            logger.warning(f'\nFailed to copy file from {path_fn_from} to {path_fn_to}:\n{e}\n')
     else:
         success = True
     return success
@@ -379,7 +382,8 @@ def move_file(path_fn_old, path_fn_new, verbose=False):
         path_fn_old.rename(path_fn_new)
         # path_fn_old.replace(path_fn_new)
     except Exception as e:
-        logger.warning(f'Failed to move/rename file from "{path_fn_old}" to "{path_fn_new}: {e}')
+        if verbose:
+            logger.warning(f'Failed to move/rename file from "{path_fn_old}" to "{path_fn_new}: {e}')
         success = False
     else:
         success = True
@@ -557,31 +561,34 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
             logger.warning(f'New file does not exist: {path_fn_new}. Rename success = {success_rename}')
     return n_files
 
-def move_and_back_copy_file(path_fn_original, path_fn_destination):
+def move_and_back_copy_file(path_fn_original, path_fn_destination, verbose=False):
     if path_fn_destination.is_dir():
         path_fn_destination = path_fn_destination / path_fn_original.name
 
     success = False
 
-    success_move = move_file(path_fn_original, path_fn_destination)
+    success_move = move_file(path_fn_original, path_fn_destination, verbose=False)
     if success_move:
-        logger.info(f'Moved file to {path_fn_destination} to preserve creation history')
+        if verbose:
+            logger.info(f'Moved file to {path_fn_destination} to preserve creation history')
 
-        success_copy_back = copy_file(path_fn_destination, path_fn_original)
+        success_copy_back = copy_file(path_fn_destination, path_fn_original, verbose=False)
 
         if success_copy_back:
-            logger.info(f'Copied file back to {path_fn_original}')
+            logger.info(f'Moved file to {path_fn_destination} and copied file back to '
+                        f'{path_fn_original.parent.relative_to(path_fn_destination.parent)}')
             success = True
     else:
-        logger.warning(f'Failed to move file to {path_fn_destination} to preserve creation history')
+        if verbose:
+            logger.warning(f'Failed to move file to {path_fn_destination} to preserve creation history')
 
-        success_copy = copy_file(path_fn_original, path_fn_destination)  # for binary files
+        success_copy = copy_file(path_fn_original, path_fn_destination, verbose=False)
 
         if success_copy:
-            logger.info(f'Failed to move file, so copied file directly to {path_fn_destination}')
+            logger.info(f'Copied file directly to {path_fn_destination} after failing to move it there')
             success = True
         else:
-            logger.warning(f'Failed to copy file directly to {path_fn_destination}')
+            logger.warning(f'Failed to copy file directly to {path_fn_destination} from {path_fn_original}')
 
     return success
 

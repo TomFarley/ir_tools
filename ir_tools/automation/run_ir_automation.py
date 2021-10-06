@@ -59,12 +59,12 @@ def automate_ir_cameras(active_cameras=()):
     signal.signal(signal.SIGINT, automation_tools.sigint_handler(proc_da_proxy))
 
     if FPATH_MSG_LOG.is_file():
-        logger.info(f'Watching daproxy log file: {FPATH_MSG_LOG}')
+        logger.info(f'DAproxy running, watching log file: {FPATH_MSG_LOG}')
     else:
-        raise FileNotFoundError(f'DAProxy log file doesn\'t not exist: {FPATH_MSG_LOG}')
+        raise FileNotFoundError(f'DAProxy ({FPATH_DA_PROXY}) not running as log file doesn\'t not exist: '
+                                f'{FPATH_MSG_LOG}')
 
     shot, state = get_shot(fn=FPATH_MSG_LOG), get_state(fn=FPATH_MSG_LOG)
-    logger.info(f'{BARS} Ready for shot {shot+1} in state "{state}" {BARS}')
 
     auto_export_paths = {}
     for camera, active in active_cameras.items():
@@ -72,10 +72,8 @@ def automate_ir_cameras(active_cameras=()):
             auto_export_paths[camera] = PATHS_AUTO_EXPORT[camera]
             logger.info(f'{camera} application should be set to export movie files to {auto_export_paths[camera]}')
 
-    logger.info(f'Freia home path exists = {FREIA_HOME_PATH.is_dir()}: {FREIA_HOME_PATH}')
-
     date_str, paths_today = automation_tools.check_date(auto_export_paths=PATHS_AUTO_EXPORT,
-                            freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras,
+                                                        freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras,
                                                         date_str_prev=None, paths_today_prev=None)
 
     armed = automation_tools.arm_scientific_cameras(active_cameras, armed={}, pixel_coords_image=PIXEL_COORDS_IMAGE)
@@ -87,6 +85,8 @@ def automate_ir_cameras(active_cameras=()):
     ops_hours = True
     shot_recorded_last = None
     loop_cnt = 0
+
+    logger.info(f'{BARS} Ready for shot {shot+1} in state "{state}" {BARS}')
 
     while True:
         loop_cnt += 1
@@ -108,8 +108,8 @@ def automate_ir_cameras(active_cameras=()):
 
             if loop_cnt % LOOP_COUNT_UPDATE == 0:
                 date_str, paths_today = automation_tools.check_date(auto_export_paths=PATHS_AUTO_EXPORT,
-                                            freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras,
-                                            date_str_prev=date_str, paths_today_prev=paths_today)
+                                                                    freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras,
+                                                                    date_str_prev=date_str, paths_today_prev=paths_today)
 
         else:
             if ops_hours:
@@ -120,7 +120,7 @@ def automate_ir_cameras(active_cameras=()):
 
             # update_remote_log(logger=logger)
 
-        if (shot_updated) and (shot_recorded_last != shot - 1):
+        if (shot_updated) and (shot_recorded_last is not None) and (shot_recorded_last != shot - 1):
             logger.warning(f'A shot has been missed! Last recorded shot was {shot_recorded_last}')
 
         t_now = datetime.datetime.now()
@@ -171,11 +171,11 @@ def automate_ir_cameras(active_cameras=()):
             for camera, active in active_cameras.items():
                 if active:
                     n_files[camera] = automation_tools.organise_new_movie_file(PATHS_AUTO_EXPORT[camera],
-                                                       FNS_FORMAT_MOVIE[camera], shot,
-                                                       path_export_today=paths_today.get(camera),
-                                                       n_file_prev=n_files[camera], t_shot_change=times['shot_change'],
-                                                       camera=camera,
-                                                       path_freia_export=paths_today.get(f'{camera}_freia', None))
+                                                                               FNS_FORMAT_MOVIE[camera], shot,
+                                                                               path_export_today=paths_today.get(camera),
+                                                                               n_file_prev=n_files[camera], t_shot_change=times['shot_change'],
+                                                                               camera=camera,
+                                                                               path_freia_export=paths_today.get(f'{camera}_freia', None))
                     armed[camera] = False
 
         if (dt_re_arm <= 0) or (state == 'PostShot'):
