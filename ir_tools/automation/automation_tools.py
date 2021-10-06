@@ -576,8 +576,7 @@ def move_and_back_copy_file(path_fn_original, path_fn_destination, verbose=False
         success_copy_back = copy_file(path_fn_destination, path_fn_original, verbose=False)
 
         if success_copy_back:
-            logger.info(f'Moved file to {path_fn_destination} and copied file back to '
-                        f'{path_fn_original.parent.relative_to(path_fn_destination.parent)}')
+            logger.info(f'Moved file to {path_fn_destination.parent} and copied file back to {path_fn_original.parent}')
             success = True
     else:
         if verbose:
