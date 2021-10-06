@@ -25,9 +25,11 @@ for option in _FREIA_HOME_PATH_OPTIONS:
     data_path = FREIA_HOME_PATH / 'data'
     if data_path.is_dir():
         logger.info(f'Freia mapping located at: {FREIA_HOME_PATH}')
+        print(f'Freia mapping located at: {FREIA_HOME_PATH}')
         break
 else:
     logger.warning('Cannot locate Freia mapping')
+    print(f'Cannot locate Freia mapping among: {_FREIA_HOME_PATH_OPTIONS}')
 
 PATHS_AUTO_EXPORT = {'LWIR1': Path('D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export\\'),
                      'MWIR1': Path('D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export\\'),
