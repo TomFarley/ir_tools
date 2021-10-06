@@ -295,24 +295,41 @@ def mkdir(path, parents=True):
     return success, created
 
 def copy_files(path_from, path_to, append_from_name=False, create_destination=True):
-    if append_from_name:
-        path_to = path_to / path_from.namereview_latest_shots
     if create_destination:
         mkdir(path_to)
+
     fns, dirs = get_fns_and_dirs(path_from)
+
     for fn in fns:
         fn_from = Path(path_from) / fn
         fn_to = Path(path_to) / fn
-        try:
-            fn_to.write_bytes(fn_from.read_bytes())
-        except FileNotFoundError as e:
-            print(f'\nFailed to copy file from {path_from} to {path_to}:\n{e}\n')
-        except PermissionError as e:
-            print(f'\nFailed to copy file from {path_from} to {path_to}:\n{e}\n')
+        success = copy_file(fn_from, fn_to, append_from_name=append_from_name, create_destination=False)
 
-    print(f'Coppied {fns} from {path_from} to {path_to}')
-    time.sleep(1)
+    print(f'Copied {fns} from {path_from} to {path_to}')
+    # time.sleep(1)
 
+def copy_file(path_fn_from, path_fn_to, append_from_name=False, create_destination=True):
+    if append_from_name or path_fn_to.is_dir():
+        path_fn_to = path_fn_to / path_fn_from.name
+
+    if create_destination:
+        mkdir(path_fn_to)
+    else:
+        if not path_fn_to.parent.is_dir():
+            logger.warning(f'File copy destination directory does not exist: {path_fn_to.parent}')
+
+    success = False
+    try:
+        path_fn_to.write_bytes(path_fn_from.read_bytes())
+    except FileNotFoundError as e:
+        logger.warning(f'\nFailed to copy file from {path_fn_from} to {path_fn_to}:\n{e}\n')
+    except PermissionError as e:
+        logger.warning(f'\nFailed to copy file from {path_fn_from} to {path_fn_to}:\n{e}\n')
+    except Exception as e:
+        logger.warning(f'\nFailed to copy file from {path_fn_from} to {path_fn_to}:\n{e}\n')
+    else:
+        success = True
+    return success
 
 def copy_dir(path_from, path_to, append_from_name=True):
     if append_from_name:
@@ -343,14 +360,31 @@ def move_files_in_dir(path_from, path_to):
         print(f'Created new directory {path_to}')
 
     fns = filenames_in_dir(path_from)
+    fns_moved = []
     for fn in fns:
         path_fn = Path(path_from) / fn
         path_fn_new = Path(path_to) / fn
-        path_fn.replace(path_fn_new)
+        success = move_file(path_fn, path_fn_new)
+        if success:
+            fns_moved.append(fn)
     if len(fns) > 0:
-        logger.info(f'Moved files from "{path_from}" to "{path_to}": {fns}')
+        logger.info(f'Moved {len(fns_moved)} files from "{path_from}" to "{path_to}": {fns_moved}')
         time.sleep(0.5)
     return fns
+
+def move_file(path_fn_old, path_fn_new, verbose=False):
+    path_fn_old = Path(path_fn_old)
+    try:
+        path_fn_old.rename(path_fn_new)
+        # path_fn_old.replace(path_fn_new)
+    except Exception as e:
+        logger.warning(f'Failed to move/rename file from "{path_fn_old}" to "{path_fn_new}')
+        success = False
+    else:
+        success = True
+        if verbose:
+            logger.info(f'Moved/renamed file from  "{path_fn_old}" to "{path_fn_new}"')
+    return success
 
 def read_shot_number(fn_shot):
     fn_shot = Path(fn_shot).expanduser().resolve()
@@ -449,7 +483,7 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
     fns_autosaved = filenames_in_dir(path_auto_export)
     fns_sorted, i_order, t_mod, ages, ages_sec = sort_files_by_age(fns_autosaved, path=path_auto_export)
     n_files = len(fns_sorted)
-    success = False
+    correct_fn = False
 
     saved_shots = shot_nos_from_fns(fns_sorted, pattern=fn_format_movie.format(shot='(\d+)'))
     if n_files == n_file_prev:
@@ -473,45 +507,57 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
                 path_fn_expected = path_auto_export / fn_expected
                 if not path_fn_expected.is_file():
                     logger.info(f'Renaming latest file from "{path_fn_new.name}" to "{path_fn_expected.name}"')
-                    path_fn_new.rename(path_fn_expected)
+                    correct_fn = move_file(path_fn_new, path_fn_expected)
+
                     path_fn_new = path_fn_expected
                     if not path_fn_expected.is_file():
                         logger.warning(f'File rename failed')
                     else:
-                        success = True
+                        correct_fn = True
                 else:
                     logger.warning(f'>>>> Expected shot no file already exists: {path_fn_expected.name}. '
                                    f'Not sure how to rename {fn_new}\nPulses saved: {saved_pulses} <<<<')
-                    success = False
+                    correct_fn = False
 
             else:
                 logger.warning(f'>>>> Newest file is older than time of change to latest shot number. <<<<')
                 logger.warning(f'File created at {t_mod_fn_new}. Shot state change at {t_shot_change}. '
                                f'dt={dt_file_since_shot_change:0.1f} < 0 ')
-                success = False
+                correct_fn = False
         elif (dt_file_since_shot_change is None) or (dt_file_since_shot_change >= 0):
-            success = True
+            # Name already correct and file age ok
+            correct_fn = True
         else:
-            logger.warning(f'File has write name but is too old ({dt_file_since_shot_change} s): {path_fn_new}')
+            logger.warning(f'File has correct name but is too old ({dt_file_since_shot_change} s): {path_fn_new}')
+            correct_fn = False
 
-        if success and path_fn_new.is_file() and (path_export_today is not None):
+        if correct_fn and path_fn_new.is_file() and (path_export_today is not None):
             dest = path_export_today / path_fn_new.name
-            path_fn_new.rename(dest)
-            logger.info(f'Moved latest file to {dest.parent} to preserve creation history')
 
-            path_fn_new.write_bytes(dest.read_bytes())  # for binary files
-            logger.info(f'Copied new movie file back to {path_fn_new}')
+            succes_move_today = move_file(path_fn_new, dest)
+            if succes_move_today:
+                logger.info(f'Moved latest file to {dest.parent} to preserve creation history')
+                success_copy_back = copy_file(dest, path_fn_new)
+                if success_copy_back:
+                    logger.info(f'Copied new movie file back to {path_fn_new}')
+            else:
+                logger.warning(f'Failed to move latest file to {dest.parent} to preserve creation history')
+
             time.sleep(0.5)
 
             if (path_freia_export is not None) and (camera not in PROTECTION_CAMERAS):
                 dest = path_freia_export / path_fn_new.name
 
                 try:
-                    path_fn_new.rename(dest)
-                    logger.info(f'Moved latest file to {dest.parent} to preserve creation history')
+                    success_move_freia = move_file(path_fn_new, dest)
+                    if success_move_freia:
+                        logger.info(f'Moved latest file to {dest.parent} to preserve creation history')
+                        success_copy_back = copy_file(dest, path_fn_new)
+                        if success_copy_back:
+                            logger.info(f'Copied new movie file back to {path_fn_new}')
+                    else:
+                        logger.warning(f'Failed to move latest file to {dest.parent} to preserve creation history')
 
-                    path_fn_new.write_bytes(dest.read_bytes())  # for binary files
-                    logger.info(f'Copied new movie file back to {path_fn_new}')
                 except OSError as e:
                     logger.warning(f'Failed to move file to {path_freia_export}')
                     try:
@@ -519,10 +565,10 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
                         logger.info(f'Copied new movie file back to {path_fn_new}')
                     except Exception as e:
                         logger.warning(f'Failed to copy file to {path_freia_export}')
-        elif not success:
-            logger.warning(f'Didnt copy file as rename success = {success}')
+        elif not correct_fn:
+            logger.warning(f'Didn\'t copy file as rename success = {success_rename}')
         else:
-            logger.warning(f'New file does not exist: {path_fn_new}. Rename success = {success}')
+            logger.warning(f'New file does not exist: {path_fn_new}. Rename success = {success_rename}')
     return n_files
 
 
