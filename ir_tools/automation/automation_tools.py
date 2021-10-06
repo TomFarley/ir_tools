@@ -388,11 +388,11 @@ def empty_auto_export(path_auto_export):
     logger.info(f'Moved previously exported files to {path_auto_export_backup} from {path_auto_export}')
 
 
-def check_date(auto_export_paths, freia_export_paths, active_cameras, date_prev=None):
+def check_date(auto_export_paths, freia_export_paths, active_cameras, date_str_prev=None, paths_today_prev=None):
     date = datetime.now()
     date_str = date.strftime('%Y-%m-%d')
-    paths_today = dict()
-    if (date.weekday() <= 5) and ((date_prev != date_str) or (date_prev is None)):
+    if (date.weekday() <= 5) and ((date_str_prev != date_str) or (date_str_prev is None)):
+        paths_today = dict()
         # No weekend ops
         for camera, path in auto_export_paths.items():
             if active_cameras.get(camera, False):
@@ -411,6 +411,8 @@ def check_date(auto_export_paths, freia_export_paths, active_cameras, date_prev=
 
                 if path_export_today.is_dir():
                     paths_today[f'{camera}_freia'] = path_export_today
+    else:
+        paths_today = paths_today_prev
 
     return date_str, paths_today
 

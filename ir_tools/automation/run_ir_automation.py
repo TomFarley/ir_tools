@@ -67,7 +67,8 @@ def automate_ir_cameras(active_cameras=()):
             auto_export_paths[camera] = PATHS_AUTO_EXPORT[camera]
 
     date_str, paths_today = automation_tools.check_date(auto_export_paths=PATHS_AUTO_EXPORT,
-                            freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras, date_prev=None)
+                            freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras,
+                                                        date_str_prev=None, paths_today_prev=None)
 
     armed = automation_tools.arm_scientific_cameras(active_cameras, armed={}, pixel_coords_image=PIXEL_COORDS_IMAGE)
 
@@ -101,9 +102,9 @@ def automate_ir_cameras(active_cameras=()):
 
             if loop_cnt % LOOP_COUNT_UPDATE == 0:
                 date_str, paths_today = automation_tools.check_date(auto_export_paths=PATHS_AUTO_EXPORT,
-                                                                    freia_export_paths=PATHS_FREIA_EXPORT,
-                                                                    active_cameras=active_cameras, date_prev=date_str)
-                pass
+                                            freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras,
+                                            date_str_prev=date_str, paths_today_prev=paths_today)
+
         else:
             if ops_hours:
                 ops_hours = False
