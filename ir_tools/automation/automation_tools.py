@@ -573,7 +573,7 @@ def move_and_back_copy_file(path_fn_original, path_fn_destination):
             logger.info(f'Copied file back to {path_fn_original}')
             success = True
     else:
-        logger.warning(f'Failed to move file to {# path_fn_destination.parent} to preserve creation history')
+        logger.warning(f'Failed to move file to {path_fn_destination} to preserve creation history')
 
         success_copy = copy_file(path_fn_original, path_fn_destination)  # for binary files
 
