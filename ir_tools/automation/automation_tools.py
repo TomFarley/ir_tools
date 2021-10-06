@@ -15,7 +15,8 @@ from typing import Iterable, Optional, Any
 from pathlib import Path
 
 import numpy as np
-from ir_tools.automation.automation_settings import IRCAM_CAMERAS, FLIR_CAMERAS, PROTECTION_CAMERAS, FPATH_LOG, YES, NO
+from ir_tools.automation.automation_settings import (IRCAM_CAMERAS, FLIR_CAMERAS, PROTECTION_CAMERAS, FPATH_LOG,
+                                                     YES, NO, FREIA_HOME_PATH)
 
 logger = logging.getLogger(__name__)
 # fhandler = logging.FileHandler(FPATH_LOG)
@@ -547,6 +548,12 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
 
             if (path_freia_export is not None) and (camera not in PROTECTION_CAMERAS):
                 dest = path_freia_export / path_fn_new.name
+                logger.info(f'Freia home ({FREIA_HOME_PATH.is_dir()}): {FREIA_HOME_PATH}')
+                logger.info(f'Freia dest ({dest.is_dir()}): {dest}')
+                dest_parent = dest
+                for i in np.arange(4):
+                    dest_parent = dest_parent.parent
+                    logger.info(f'Freia dest parent ({dest_parent.is_dir()}): {dest_parent}')
 
                 try:
                     success_move_freia = move_file(path_fn_new, dest)

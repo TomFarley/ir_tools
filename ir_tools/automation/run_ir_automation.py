@@ -23,7 +23,8 @@ from ir_tools.automation.automation_settings import (PATHS_AUTO_EXPORT, PATHS_FR
                                                      PROTECTION_CAMERAS, FPATH_LOG, BARS, FREIA_HOME_PATH)
 from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot, get_state
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
+logger = logging.getLogger('ir_tools.automation.run_ir_automation')
 
 print(f'run logger: {logger}, level: {logger.level}, handlers: {logger.handlers}, handler levels: {[h.level for h in logger.handlers]}')
 # logger.propagate = False
