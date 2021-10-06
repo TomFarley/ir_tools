@@ -34,15 +34,6 @@ PIXEL_COORDS = {}
 PIXEL_COORDS['record'] = (360, 55)
 
 logger = logging.getLogger(__name__)
-# logger.propagate = False
-# fhandler = logging.FileHandler(FPATH_LOG)
-# shandler = logging.StreamHandler()
-# [i.setLevel('INFO') for i in [logger, fhandler, shandler]]
-# formatter = logging.Formatter('%(asctime)s - %(message)s')
-# fhandler.setFormatter(formatter)
-# shandler.setFormatter(formatter)
-# logger.addHandler(fhandler)
-# logger.addHandler(shandler)
 
 def automate_research_ir():
 

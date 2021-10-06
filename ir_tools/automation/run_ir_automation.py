@@ -23,19 +23,7 @@ from ir_tools.automation.automation_settings import (PATHS_AUTO_EXPORT, PATHS_FR
                                                      PROTECTION_CAMERAS, FPATH_LOG, BARS, FREIA_HOME_PATH)
 from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot, get_state
 
-# logger = logging.getLogger(__name__)
 logger = logging.getLogger('ir_tools.automation.run_ir_automation')
-
-# print(f'run logger: {logger}, level: {logger.level}, handlers: {logger.handlers}, handler levels: {[h.level for h in logger.handlers]}')
-# logger.propagate = False
-# fhandler = logging.FileHandler(FPATH_LOG)
-# shandler = logging.StreamHandler()
-# [i.setLevel('INFO') for i in [logger, fhandler, shandler]]
-# formatter = logging.Formatter('%(asctime)s - %(message)s')
-# fhandler.setFormatter(formatter)
-# shandler.setFormatter(formatter)
-# logger.addHandler(fhandler)
-# logger.addHandler(shandler)
 
 def automate_ir_cameras(active_cameras=()):
     active_cameras = dict(active_cameras)
@@ -49,7 +37,8 @@ def automate_ir_cameras(active_cameras=()):
     logger.info(
         f'Starting camera automation for cameras: '
         f'{", ".join([camera for camera, active in active_cameras.items() if active])}')
-    logger.info(f'Windows should be organised on screen according to PowerToys Fancy Zones (see IR Opp Instructions)')
+    logger.info(f'Windows should be organised on screen according to PowerToys Fancy Zones '
+                f'(see IR Operating Instructions)')
 
     if AUTOMATE_DAPROXY:
         proc_da_proxy = daproxy.run_da_proxy(FPATH_DA_PROXY)
@@ -59,7 +48,7 @@ def automate_ir_cameras(active_cameras=()):
     signal.signal(signal.SIGINT, automation_tools.sigint_handler(proc_da_proxy))
 
     if FPATH_MSG_LOG.is_file():
-        logger.info(f'DAproxy running, watching log file: {FPATH_MSG_LOG}')
+        logger.info(f'DAproxy running, watching log file: "{FPATH_MSG_LOG}"')
     else:
         raise FileNotFoundError(f'DAProxy ({FPATH_DA_PROXY}) not running as log file doesn\'t not exist: '
                                 f'{FPATH_MSG_LOG}')
@@ -70,7 +59,7 @@ def automate_ir_cameras(active_cameras=()):
     for camera, active in active_cameras.items():
         if active:
             auto_export_paths[camera] = PATHS_AUTO_EXPORT[camera]
-            logger.info(f'{camera} application should be set to export movie files to {auto_export_paths[camera]}')
+            logger.info(f'{camera} application should be set to export movie files to ""{auto_export_paths[camera]}"')
 
     date_str, paths_today = automation_tools.check_date(auto_export_paths=PATHS_AUTO_EXPORT,
                                                         freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras,
