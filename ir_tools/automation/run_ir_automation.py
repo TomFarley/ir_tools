@@ -26,7 +26,7 @@ from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot,
 # logger = logging.getLogger(__name__)
 logger = logging.getLogger('ir_tools.automation.run_ir_automation')
 
-print(f'run logger: {logger}, level: {logger.level}, handlers: {logger.handlers}, handler levels: {[h.level for h in logger.handlers]}')
+# print(f'run logger: {logger}, level: {logger.level}, handlers: {logger.handlers}, handler levels: {[h.level for h in logger.handlers]}')
 # logger.propagate = False
 # fhandler = logging.FileHandler(FPATH_LOG)
 # shandler = logging.StreamHandler()

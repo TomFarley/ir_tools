@@ -379,7 +379,7 @@ def move_file(path_fn_old, path_fn_new, verbose=False):
         path_fn_old.rename(path_fn_new)
         # path_fn_old.replace(path_fn_new)
     except Exception as e:
-        logger.warning(f'Failed to move/rename file from "{path_fn_old}" to "{path_fn_new}')
+        logger.warning(f'Failed to move/rename file from "{path_fn_old}" to "{path_fn_new}: {e}')
         success = False
     else:
         success = True
@@ -533,51 +533,54 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
             correct_fn = False
 
         if correct_fn and path_fn_new.is_file() and (path_export_today is not None):
-            dest = path_export_today / path_fn_new.name
+            path_fn_today = path_export_today / path_fn_new.name
+            path_fn_freia = path_freia_export / path_fn_new.name
 
-            succes_move_today = move_file(path_fn_new, dest)
-            if succes_move_today:
-                logger.info(f'Moved latest file to {dest.parent} to preserve creation history')
-                success_copy_back = copy_file(dest, path_fn_new)
-                if success_copy_back:
-                    logger.info(f'Copied new movie file back to {path_fn_new}')
-            else:
-                logger.warning(f'Failed to move latest file to {dest.parent} to preserve creation history')
+            logger.info(f'path_fn_freia ({path_fn_freia.is_file()}): {path_fn_freia}')
+            logger.info(f'Freia home ({FREIA_HOME_PATH.is_dir()}): {FREIA_HOME_PATH}')
+            logger.info(f'Freia dest file ({path_fn_new.is_file()}): {path_fn_new}')
+            dest_parent = path_fn_freia
+            for i in np.arange(4):
+                dest_parent = dest_parent.parent
+                logger.info(f'Freia dest file parent ({dest_parent.is_dir()}): {dest_parent}')
 
-            time.sleep(0.5)
+            success_move_today = move_and_back_copy_file(path_fn_new, path_fn_today)
+            success_move_freia = move_and_back_copy_file(path_fn_today, path_fn_freia)
 
-            if (path_freia_export is not None) and (camera not in PROTECTION_CAMERAS):
-                dest = path_freia_export / path_fn_new.name
-                logger.info(f'Freia home ({FREIA_HOME_PATH.is_dir()}): {FREIA_HOME_PATH}')
-                logger.info(f'Freia dest ({dest.is_dir()}): {dest}')
-                dest_parent = dest
-                for i in np.arange(4):
-                    dest_parent = dest_parent.parent
-                    logger.info(f'Freia dest parent ({dest_parent.is_dir()}): {dest_parent}')
 
-                try:
-                    success_move_freia = move_file(path_fn_new, dest)
-                    if success_move_freia:
-                        logger.info(f'Moved latest file to {dest.parent} to preserve creation history')
-                        success_copy_back = copy_file(dest, path_fn_new)
-                        if success_copy_back:
-                            logger.info(f'Copied new movie file back to {path_fn_new}')
-                    else:
-                        logger.warning(f'Failed to move latest file to {dest.parent} to preserve creation history')
-
-                except OSError as e:
-                    logger.warning(f'Failed to move file to {path_freia_export}')
-                    try:
-                        path_fn_new.write_bytes(dest.read_bytes())  # for binary files
-                        logger.info(f'Copied new movie file back to {path_fn_new}')
-                    except Exception as e:
-                        logger.warning(f'Failed to copy file to {path_freia_export}')
         elif not correct_fn:
             logger.warning(f'Didn\'t copy file as rename success = {success_rename}')
         else:
             logger.warning(f'New file does not exist: {path_fn_new}. Rename success = {success_rename}')
     return n_files
 
+def move_and_back_copy_file(path_fn_original, path_fn_destination):
+    if path_fn_destination.is_dir():
+        path_fn_destination = path_fn_destination / path_fn_original.name
+
+    success = False
+
+    success_move = move_file(path_fn_original, path_fn_destination)
+    if success_move:
+        logger.info(f'Moved file to {path_fn_destination.parent} to preserve creation history')
+
+        success_copy_back = copy_file(path_fn_destination, path_fn_original)
+
+        if success_copy_back:
+            logger.info(f'Copied file back to {path_fn_original}')
+            success = True
+    else:
+        logger.warning(f'Failed to move file to {path_fn_destination.parent} to preserve creation history')
+
+        success_copy = copy_file(path_fn_original, path_fn_destination)  # for binary files
+
+        if success_copy:
+            logger.info(f'Copied file directly to {path_fn_destination}')
+            success = True
+        else:
+            logger.warning(f'Failed to copy file directly to {path_fn_destination}')
+
+    return success
 
 if __name__ == '__main__':
     fn = '~/data/movies/diagnostic_pc_transfer/next_mast_u_shot_no.csv'
