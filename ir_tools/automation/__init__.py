@@ -21,8 +21,20 @@ shandler = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s - %(message)s')
 fhandler.setFormatter(formatter)
 shandler.setFormatter(formatter)
-logger.addHandler(fhandler)
 logger.addHandler(shandler)
+logger.addHandler(fhandler)
 
 if __name__ == '__main__':
+    # Set logging level for console output handler propagated throughout fire package
+    handlers = logger.handlers
+    for handler in handlers:
+        print(f'logging handler {handler} set to level: {handler.level}')
+
+    if len(handlers) > 0:
+        stream_handler = handlers[0]
+    else:
+        logger.warning(f'Failed to set up stream handler')
+
+    logger.setLevel(logging.DEBUG)
+    print(f'parent logger {logger_fire} set to level: {logger_fire.level}')
     pass

@@ -13,16 +13,19 @@ import logging, signal, time, datetime, os
 
 import numpy as np
 
+import ir_tools.automation
 from ir_tools.automation import automation_tools, daproxy, flir_researchir_automation, ircam_works_automation
 from ir_tools.automation.automation_settings import (PATHS_AUTO_EXPORT, PATHS_FREIA_EXPORT, FNS_FORMAT_MOVIE,
                                                      AUTOMATE_DAPROXY, TIME_REFRESH_MAIN_LOOP_OPS, TIME_DURATION_RECORD,
                                                      TIME_REFRESH_MAIN_LOOP_PRESHOT, TIME_REFRESH_MAIN_LOOP_NON_OPS,
                                                      TIME_RECORD_PRE_SHOT, LOOP_COUNT_UPDATE, STOP_TIME, START_TIME,
                                                      PIXEL_COORDS_IMAGE, IRCAM_CAMERAS, FLIR_CAMERAS,
-                                                     PROTECTION_CAMERAS, FPATH_LOG, BARS)
+                                                     PROTECTION_CAMERAS, FPATH_LOG, BARS, FREIA_HOME_PATH)
 from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot, get_state
 
 logger = logging.getLogger(__name__)
+
+print(f'run logger: {logger}, level: {logger.level}, handlers: {logger.handlers}, handler levels: {[h.level for h in logger.handlers]}')
 # logger.propagate = False
 # fhandler = logging.FileHandler(FPATH_LOG)
 # shandler = logging.StreamHandler()
@@ -67,6 +70,8 @@ def automate_ir_cameras(active_cameras=()):
         if active:
             auto_export_paths[camera] = PATHS_AUTO_EXPORT[camera]
             logger.info(f'{camera} application should be set to export movie files to {auto_export_paths[camera]}')
+
+    logger.info(f'Freia home path exists = {FREIA_HOME_PATH.is_dir()}: {FREIA_HOME_PATH}')
 
     date_str, paths_today = automation_tools.check_date(auto_export_paths=PATHS_AUTO_EXPORT,
                             freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras,

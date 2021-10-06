@@ -284,13 +284,13 @@ def mkdir(path, parents=True):
             try:
                 os.makedirs(str(path))
             except Exception as e:
-                print(f'Failed to create directory using os.mkdirs: "{path}": {e}')
+                logger.warning(f'Failed to create directory using os.mkdirs: "{path}": {e}')
                 success = False
             else:
                 created = True
                 success = True
         else:
-            print(f'Created new directory "{path}"')
+            logger.info(f'Created new directory "{path}"')
             created = True
     return success, created
 
@@ -308,12 +308,12 @@ def copy_files(path_from, path_to, append_from_name=False, create_destination=Tr
     print(f'Copied {fns} from {path_from} to {path_to}')
     # time.sleep(1)
 
-def copy_file(path_fn_from, path_fn_to, append_from_name=False, create_destination=True):
+def copy_file(path_fn_from, path_fn_to, append_from_name=False, create_destination=False):
     if append_from_name or path_fn_to.is_dir():
         path_fn_to = path_fn_to / path_fn_from.name
 
     if create_destination:
-        mkdir(path_fn_to)
+        mkdir(path_fn_to.parent)
     else:
         if not path_fn_to.parent.is_dir():
             logger.warning(f'File copy destination directory does not exist: {path_fn_to.parent}')
