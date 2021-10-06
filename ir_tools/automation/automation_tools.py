@@ -443,6 +443,8 @@ def arm_scientific_cameras(active_cameras, armed, pixel_coords_image):
 
 def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export_today, n_file_prev, t_shot_change,
                             camera, path_freia_export=None):
+    logger.info(f'path_export_today: {path_export_today}, path_auto_export: {path_auto_export}, path_freia_export: {path_freia_export}')
+
     fns_autosaved = filenames_in_dir(path_auto_export)
     fns_sorted, i_order, t_mod, ages, ages_sec = sort_files_by_age(fns_autosaved, path=path_auto_export)
     n_files = len(fns_sorted)
@@ -490,7 +492,8 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
             success = True
         else:
             logger.warning(f'File has write name but is too old ({dt_file_since_shot_change} s): {path_fn_new}')
-        if success and path_fn_new.is_file():
+
+        if success and path_fn_new.is_file() and (path_export_today is not None):
             dest = path_export_today / path_fn_new.name
             path_fn_new.rename(dest)
             logger.info(f'Moved latest file to {dest.parent} to preserve creation history')
