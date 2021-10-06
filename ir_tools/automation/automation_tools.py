@@ -533,19 +533,22 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
             correct_fn = False
 
         if correct_fn and path_fn_new.is_file() and (path_export_today is not None):
+            # logger.info(f'path_fn_new ({path_fn_new.is_file()}): {path_fn_new}')
+
             path_fn_today = path_export_today / path_fn_new.name
-            path_fn_freia = path_freia_export / path_fn_new.name
-
-            logger.info(f'path_fn_freia ({path_fn_freia.is_file()}): {path_fn_freia}')
-            logger.info(f'Freia home ({FREIA_HOME_PATH.is_dir()}): {FREIA_HOME_PATH}')
-            logger.info(f'Freia dest file ({path_fn_new.is_file()}): {path_fn_new}')
-            dest_parent = path_fn_freia
-            for i in np.arange(4):
-                dest_parent = dest_parent.parent
-                logger.info(f'Freia dest file parent ({dest_parent.is_dir()}): {dest_parent}')
-
             success_move_today = move_and_back_copy_file(path_fn_new, path_fn_today)
-            success_move_freia = move_and_back_copy_file(path_fn_today, path_fn_freia)
+
+            if camera not in PROTECTION_CAMERAS:
+                path_fn_freia = path_freia_export / path_fn_new.name
+
+                # logger.info(f'Freia home ({FREIA_HOME_PATH.is_dir()}): {FREIA_HOME_PATH}')
+                # logger.info(f'Freia dest file ({path_fn_freia.is_file()}): {path_fn_new}')
+                # dest_parent = path_fn_freia
+                # for i in np.arange(4):
+                #     dest_parent = dest_parent.parent
+                #     logger.info(f'Freia dest file parent ({dest_parent.is_dir()}): {dest_parent}')
+
+                success_move_freia = move_and_back_copy_file(path_fn_today, path_fn_freia)
 
 
         elif not correct_fn:
@@ -562,7 +565,7 @@ def move_and_back_copy_file(path_fn_original, path_fn_destination):
 
     success_move = move_file(path_fn_original, path_fn_destination)
     if success_move:
-        logger.info(f'Moved file to {path_fn_destination.parent} to preserve creation history')
+        logger.info(f'Moved file to {path_fn_destination} to preserve creation history')
 
         success_copy_back = copy_file(path_fn_destination, path_fn_original)
 
@@ -570,12 +573,12 @@ def move_and_back_copy_file(path_fn_original, path_fn_destination):
             logger.info(f'Copied file back to {path_fn_original}')
             success = True
     else:
-        logger.warning(f'Failed to move file to {path_fn_destination.parent} to preserve creation history')
+        logger.warning(f'Failed to move file to {# path_fn_destination.parent} to preserve creation history')
 
         success_copy = copy_file(path_fn_original, path_fn_destination)  # for binary files
 
         if success_copy:
-            logger.info(f'Copied file directly to {path_fn_destination}')
+            logger.info(f'Failed to move file, so copied file directly to {path_fn_destination}')
             success = True
         else:
             logger.warning(f'Failed to copy file directly to {path_fn_destination}')
