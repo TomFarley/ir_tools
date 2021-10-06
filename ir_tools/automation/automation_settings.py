@@ -16,19 +16,27 @@ import xarray as xr
 import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
-logger.propagate = False
 
-if __name__ == '__main__':
-    pass
+_FREIA_HOME_PATH_OPTIONS = ['\\\\samba-1.hpc.l\\home\\', '\\\\samba-2.hpc.l\\home\\', 'H:\\\\home\\', 'F:\\\\home\\',
+                            '\\\\samba-1.hpc.l\\', '\\\\samba-2.hpc.l\\', 'H:\\\\', 'F:\\\\']
+
+for option in _FREIA_HOME_PATH_OPTIONS:
+    FREIA_HOME_PATH = Path(option)
+    data_path = FREIA_HOME_PATH / 'data'
+    if data_path.is_dir():
+        logger.info(f'Freia mapping located at: {FREIA_HOME_PATH}')
+        break
+else:
+    logger.warning('Cannot locate Freia mapping')
+
 PATHS_AUTO_EXPORT = {'LWIR1': Path('D:\\MAST-U\\LWIR_IRCAM1_HM04-A\\Operations\\2021-1st_campaign\\auto_export\\'),
                      'MWIR1': Path('D:\\MAST-U_Operations\\AIR-FLIR_1\\auto_export\\'),
                      'Px_protection': Path('D:\\FLIR_AX5_Protection_data\\PX Coil Tail\\auto_export\\'),
                      'SW_beam_dump': Path('D:\\FLIR_AX5_Protection_data\\SW_beam_dump\\auto_export\\')}
 PATH_T_DRIVE = Path(f'T:\\tfarley\\RIR\\')
 PATHS_FREIA_EXPORT = {
-                    # 'MWIR1': Path('H:\\data\\movies\\diagnostic_pc_transfer\\rir\\'),  # \\samba-2.hpc.l\home
-                    'MWIR1': Path('\\\\samba-2.hpc.l\\home\\data\\movies\\diagnostic_pc_transfer\\rir\\'),  #
-                      'LWIR1': Path('H:\\data\\movies\\diagnostic_pc_transfer\\rit\\')}
+                      'MWIR1': Path(f'{FREIA_HOME_PATH}\\data\\movies\\diagnostic_pc_transfer\\rir\\'),  #
+                      'LWIR1': Path(f'{FREIA_HOME_PATH}\\data\\movies\\diagnostic_pc_transfer\\rit\\')}
 FNS_FORMAT_MOVIE = {'LWIR1': '{shot}.RAW',
                     'MWIR1': '{shot}.ats',
                     'Px_protection': '{shot}.seq',  # shot=(\d+) for regex match
