@@ -445,7 +445,6 @@ def arm_scientific_cameras(active_cameras, armed, pixel_coords_image):
 
 def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export_today, n_file_prev, t_shot_change,
                             camera, path_freia_export=None):
-    logger.info(f'path_export_today: {path_export_today}, path_auto_export: {path_auto_export}, path_freia_export: {path_freia_export}')
 
     fns_autosaved = filenames_in_dir(path_auto_export)
     fns_sorted, i_order, t_mod, ages, ages_sec = sort_files_by_age(fns_autosaved, path=path_auto_export)
