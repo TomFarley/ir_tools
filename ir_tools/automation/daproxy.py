@@ -33,7 +33,7 @@ BARS = '='*10
 
 def run_da_proxy(fpath_da_proxy, windows=True):
     # run 'da_proxy' process to connect to MAST-U central messaging server
-    logger.info('Starting da_proxy')
+    logger.info('Attempting to start da_proxy')
     if windows:
         proc_da_proxy = subprocess.call(fpath_da_proxy)
     else:

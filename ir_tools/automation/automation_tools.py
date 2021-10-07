@@ -557,9 +557,9 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
 
 
         elif not correct_fn:
-            logger.warning(f'Didn\'t copy file as rename success = {success_rename}')
+            logger.warning(f'Didn\'t copy file as rename success = {correct_fn}')
         else:
-            logger.warning(f'New file does not exist: {path_fn_new}. Rename success = {success_rename}')
+            logger.warning(f'New file does not exist: {path_fn_new}. Rename success = {correct_fn}')
     return n_files
 
 def move_and_back_copy_file(path_fn_original, path_fn_destination, verbose=False):
@@ -576,7 +576,8 @@ def move_and_back_copy_file(path_fn_original, path_fn_destination, verbose=False
         success_copy_back = copy_file(path_fn_destination, path_fn_original, verbose=False)
 
         if success_copy_back:
-            logger.info(f'Moved file to {path_fn_destination.parent} and copied file back to {path_fn_original.parent}')
+            logger.info(f'Moved file to "{path_fn_destination.parent}" and copied file back to '
+                        f'"{path_fn_original.parent.name}"')
             success = True
     else:
         if verbose:
@@ -585,7 +586,7 @@ def move_and_back_copy_file(path_fn_original, path_fn_destination, verbose=False
         success_copy = copy_file(path_fn_original, path_fn_destination, verbose=False)
 
         if success_copy:
-            logger.info(f'Copied file directly to {path_fn_destination} after failing to move it there')
+            logger.info(f'Copied file to "{path_fn_destination}" (after failing to move it there)')
             success = True
         else:
             logger.warning(f'Failed to copy file directly to {path_fn_destination} from {path_fn_original}')
