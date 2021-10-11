@@ -33,6 +33,7 @@ def automate_ir_cameras(active_cameras=()):
     protection_active = np.any([active for camera, active in active_cameras.items() if camera in PROTECTION_CAMERAS])
     ircam_active = np.any([active for camera, active in active_cameras.items() if camera in IRCAM_CAMERAS])
     flir_active = np.any([active for camera, active in active_cameras.items() if camera in FLIR_CAMERAS])
+    sci_active = ircam_active or flir_active
 
     logger.info(
         f'Starting camera automation for cameras: '
@@ -75,12 +76,14 @@ def automate_ir_cameras(active_cameras=()):
     shot_recorded_last = None
     loop_cnt = 0
 
-    logger.info(f'{BARS} Ready for shot {shot+1} in state "{state}" {BARS}')
+    shot_next = (shot + 1) if isinstance(shot, int) else None
+    logger.info(f'{BARS} Ready for shot {shot_next} in state "{state}" {BARS}')
 
     while True:
         loop_cnt += 1
         t_now = datetime.datetime.now()
         shot, state, times, shot_updated, state_updated = daproxy.update_state_and_shot(FPATH_MSG_LOG, shot, state, times)
+        shot_next = (shot + 1) if isinstance(shot, int) else None
 
         if ((t_now.time() > START_TIME) and (t_now.time() < STOP_TIME)) and (t_now.weekday() <= 5) or state_updated:
             if state in ('PreShot', 'Trigger'):
@@ -90,7 +93,7 @@ def automate_ir_cameras(active_cameras=()):
 
             if not ops_hours:
                 logger.info('>>> GOOD MORNING <<<')
-                logger.info(f'{BARS} Waiting for shot {shot+1}. State: "{state}" {BARS}')
+                logger.info(f'{BARS} Waiting for shot {shot_next}. State: "{state}" {BARS}')
                 ops_hours = True
                 if AUTOMATE_DAPROXY:
                     daproxy.kill_da_proxy(proc_da_proxy)
@@ -123,35 +126,47 @@ def automate_ir_cameras(active_cameras=()):
         # print(f'times: {times}')
         # print(f't_now: {t_now}')
         # logger.info(f't_shot_expected: {times.get("shot_expected")}')
+        if state == 'Abort':
+            # Switch to abort state will have updated dt_shot to be negative (ie in past)
+            logger.warning(f'Shot {shot} ABORTED. '
+                           f'If recordings have been made, they will be overwritten for this shot number.')
+            recording = False  # Don't update last shot recorded
 
-        if (dt_shot >= 0):
+        elif (dt_shot >= 0):
+            # Before shot
             if (protection_active and (loop_cnt % LOOP_COUNT_UPDATE == 0) or (dt_shot < 7)) or state_updated:
+                # Print updates periodically
                 logger.info(f'Shot {shot} expected in dt: {dt_shot:0.1f} s')
+            if not recording:
+                if (dt_shot <= TIME_RECORD_PRE_SHOT):
+                    if protection_active:
+                        # Shot imminent; make sure sci cameras are armed and start protection cameras recording
+                        logger.info(f'Starting protection cameras recording {TIME_RECORD_PRE_SHOT:0.1f}s before shot for '
+                                    f'{TIME_DURATION_RECORD:0.1f}s')
+                        # Start recording protection views
+                        if active_cameras['Px_protection']:
+                            flir_researchir_automation.start_recording_research_ir(PIXEL_COORDS_IMAGE['Px_protection'], 'Px_protection')
+                        if active_cameras['SW_beam_dump']:
+                            flir_researchir_automation.start_recording_research_ir(PIXEL_COORDS_IMAGE['SW_beam_dump'], 'SW_beam_dump')
+                        recording = True
+                    if sci_active:
+                        # TIME_RECORD_PRE_SHOT before shot
+                        armed = automation_tools.arm_scientific_cameras(active_cameras, armed, pixel_coords_image=PIXEL_COORDS_IMAGE)
 
-            if (dt_shot <= TIME_RECORD_PRE_SHOT) and (not recording):
-                if protection_active:
-                    logger.info(
-                        f'Starting protection cameras recording {TIME_RECORD_PRE_SHOT:0.1f}s before shot for {TIME_DURATION_RECORD:0.1f}s')
-                    # Start recording protection views
-                    if active_cameras['Px_protection']:
-                        flir_researchir_automation.start_recording_research_ir(PIXEL_COORDS_IMAGE['Px_protection'], 'Px_protection')
-                    if active_cameras['SW_beam_dump']:
-                        flir_researchir_automation.start_recording_research_ir(PIXEL_COORDS_IMAGE['SW_beam_dump'], 'SW_beam_dump')
+        elif (dt_shot < 0) and (dt_recording_finished >= 0):
+            # Shot started.
+            if protection_active:
+                if (loop_cnt % LOOP_COUNT_UPDATE == 0) or (dt_recording_finished < 2):
+                    logger.info(f'Recording should finish in dt: {dt_recording_finished:0.1f} s')
+            elif sci_active:
+                # Protection cameras not active, so log start of scientific recording now
                 recording = True
-
-            else:
-                # TIME_RECORD_PRE_SHOT before shot
-                armed = automation_tools.arm_scientific_cameras(active_cameras, armed, pixel_coords_image=PIXEL_COORDS_IMAGE)
-
-
-        elif (dt_recording_finished >= 0) and protection_active:
-            if (loop_cnt % LOOP_COUNT_UPDATE == 0) or (dt_recording_finished < 2):
-                logger.info(f'Recording should finish in dt: {dt_recording_finished:0.1f} s')
-
-        if (dt_recording_finished <= -5) and (recording):
-            # Protection recordings complete, rename files and organise into todays date folders
+        elif (dt_recording_finished <= -5) and (recording):
+            # Shot finished, protection recordings complete: rename files and organise into today's date folders etc.
+            # If shot has aborted, recording will have already been set to False and files will not be renamed/copied
             recording = False
             shot_recorded_last = shot
+            after_abort = (shot_recorded_last != (shot-1))
 
             for camera in IRCAM_CAMERAS:
                 if active_cameras.get(camera, False):
@@ -160,15 +175,17 @@ def automate_ir_cameras(active_cameras=()):
             for camera, active in active_cameras.items():
                 if active:
                     n_files[camera] = automation_tools.organise_new_movie_file(PATHS_AUTO_EXPORT[camera],
-                                                                               FNS_FORMAT_MOVIE[camera], shot,
-                                                                               path_export_today=paths_today.get(camera),
-                                                                               n_file_prev=n_files[camera], t_shot_change=times['shot_change'],
-                                                                               camera=camera,
-                                                                               path_freia_export=paths_today.get(f'{camera}_freia', None))
+                                                   FNS_FORMAT_MOVIE[camera], shot,
+                                                   path_export_today=paths_today.get(camera),
+                                                   n_file_prev=n_files[camera], t_shot_change=times['shot_change'],
+                                                   camera=camera,
+                                                   path_freia_export=paths_today.get(f'{camera}_freia', None),
+                                                   overwrite_files=after_abort)
                     armed[camera] = False
 
         if (dt_re_arm <= 0) or (state == 'PostShot'):
-            armed = automation_tools.arm_scientific_cameras(active_cameras, armed, pixel_coords_image=PIXEL_COORDS_IMAGE)
+            armed = automation_tools.arm_scientific_cameras(active_cameras, armed,
+                                                            pixel_coords_image=PIXEL_COORDS_IMAGE)
 
 
 if __name__ == '__main__':

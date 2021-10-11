@@ -58,7 +58,8 @@ def update_estimated_shot_time(state, time_entered_state, shot_time_estimate_pre
         'Ready': 110,  # ~1min 50s before shot
         'PreShot': 105,  # PreShot comes ~1min 45s before shot
         'Trigger': 15,  # ~15 s before shot
-        'Abort': -30,  # Effectively after shot
+        'Abort': -60,  # Effectively after shot
+        # 'UNDEFINED': np.nan
     }
     delay = delays.get(state, None)
     if delay is not None:
@@ -148,11 +149,6 @@ def from_msg_log(fn, field, logger=None):
 
     return val
 
-
-if __name__ == '__main__':
-    pass
-
-
 def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
     from ir_tools.automation.automation_settings import TIME_DELAY_REARM
     from ir_tools.automation.automation_settings import TIME_DURATION_RECORD
@@ -189,3 +185,7 @@ def update_state_and_shot(FPATH_MSG_LOG, shot_prev, state_prev, times):
         shot_updated = False
 
     return shot, state, times, shot_updated, state_updated
+
+
+if __name__ == '__main__':
+    pass

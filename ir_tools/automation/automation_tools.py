@@ -485,7 +485,7 @@ def arm_scientific_cameras(active_cameras, armed, pixel_coords_image):
 
 
 def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export_today, n_file_prev, t_shot_change,
-                            camera, path_freia_export=None):
+                            camera, path_freia_export=None, overwrite_files=False):
 
     fns_autosaved = filenames_in_dir(path_auto_export)
     fns_sorted, i_order, t_mod, ages, ages_sec = sort_files_by_age(fns_autosaved, path=path_auto_export)
@@ -512,7 +512,10 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
             if (dt_file_since_shot_change is None) or (dt_file_since_shot_change >= 0):
                 fn_expected = fn_format_movie.format(shot=f'0{shot}')
                 path_fn_expected = path_auto_export / fn_expected
-                if not path_fn_expected.is_file():
+                file_already_exists = path_fn_expected.is_file()
+                if (not file_already_exists) or (overwrite_files):
+                    if file_already_exists:
+                        logger.warning(f'Overwriting existing file: {path_fn_expected}')
                     logger.info(f'Renaming latest file from "{path_fn_new.name}" to "{path_fn_expected.name}"')
                     correct_fn = move_file(path_fn_new, path_fn_expected)
 
