@@ -20,7 +20,9 @@ setup(
         "pandas",
         "matplotlib",
         "opencv-python",
-        ],
+        'fire'
+    ],
+    extras_require=['pyuda'],
     python_requires='>=3',
     setup_requires=['pytest-runner'],
     # test_suite='tests.test_suite_fast',  # 'tests.test_suite_slow'

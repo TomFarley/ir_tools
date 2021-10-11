@@ -25,7 +25,6 @@ for option in _FREIA_HOME_PATH_OPTIONS:
     data_path = FREIA_HOME_PATH / 'data'
     if data_path.is_dir():
         logger.info(f'Freia mapping located at: {FREIA_HOME_PATH}')
-        print(f'Freia mapping located at: {FREIA_HOME_PATH}')
         break
 else:
     logger.warning('Cannot locate Freia mapping')

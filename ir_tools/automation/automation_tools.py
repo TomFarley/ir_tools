@@ -11,12 +11,12 @@ import os, re
 import shutil
 import time
 from datetime import datetime
-from typing import Iterable, Optional, Any
+from typing import Iterable, Optional, Any, Callable
 from pathlib import Path
 
 import numpy as np
-from ir_tools.automation.automation_settings import (IRCAM_CAMERAS, FLIR_CAMERAS, PROTECTION_CAMERAS, FPATH_LOG,
-                                                     YES, NO, FREIA_HOME_PATH)
+from ir_tools.automation.automation_settings import (IRCAM_CAMERAS, FLIR_CAMERAS, PROTECTION_CAMERAS,
+                                                     YES, NO)
 
 logger = logging.getLogger(__name__)
 # fhandler = logging.FileHandler(FPATH_LOG)
@@ -137,7 +137,7 @@ def update_next_shot_file(shot_no_next, fn_shot='~/ccfepc/T/tfarley/next_mast_u_
         write_shot_number(fn_shot=fn_shot, shot_number=shot_no_next)
 
         if organise_ircam_raw:
-            from fire.scripts.organise_ircam_raw_files import organise_ircam_raw_files
+            from ir_tools.data_formats.organise_movie_files_from_diag_pc import organise_ircam_raw_files
             print(f'{datetime.now()}: Organising IRcam raw files')
             camera_settings = dict(camera='rit', fps=400, exposure=0.25e-3, lens=25e-3, t_before_pulse=1e-1)
             path_in = '/home/tfarley/data/movies/diagnostic_pc_transfer/{today}/'
@@ -147,7 +147,7 @@ def update_next_shot_file(shot_no_next, fn_shot='~/ccfepc/T/tfarley/next_mast_u_
                 logger.warning(f'Failed to organise IRcam raw files: {e}')
 
         if organise_flir_ats:
-            from fire.scripts.organise_ircam_raw_files import convert_ats_files_archive_to_ipx
+            from ir_tools.data_formats.convert_movies_to_ipx import convert_ats_files_archive_to_ipx
             path_in = '~/data/movies/mast_u/rir_ats_files/{date}'
             fn_meta = '/home/tfarley/data/movies/mast_u/rir_ats_files/rir_meta.json'
             convert_ats_files_archive_to_ipx(pulses=[shot_no_file], path_in=path_in, copy_ats_file=True, fn_meta=fn_meta)
@@ -214,6 +214,7 @@ def get_fns_and_dirs(path):
         raise FileNotFoundError(f'Path does not exist: {path}')
 
     fns = []
+    dirs_top = []
     for i, (dirpath, dirnames, filenames) in enumerate(os.walk(path)):
         fns.append(filenames)
         if i == 0:
@@ -521,8 +522,8 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
                     else:
                         correct_fn = True
                 else:
-                    logger.warning(f'>>>> Expected shot no file already exists: {path_fn_expected.name}. '
-                                   f'Not sure how to rename {fn_new}\nPulses saved: {saved_pulses} <<<<')
+                    logger.warning(f'>>>> Expected shot no file already exists: "{path_fn_expected.name}".  <<<<  '
+                                   f'Not sure how to rename "{fn_new}". Pulses saved: {saved_shots} ({fns_sorted})')
                     correct_fn = False
 
             else:

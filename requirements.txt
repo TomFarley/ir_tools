@@ -1,0 +1,7 @@
+numpy >= 1.12.0
+scipy
+xarray
+pandas
+matplotlib
+opencv-python
+fire
