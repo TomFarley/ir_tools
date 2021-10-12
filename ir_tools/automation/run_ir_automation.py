@@ -96,7 +96,9 @@ def automate_ir_cameras(active_cameras=()):
                 logger.info(f'{BARS} Waiting for shot {shot_next}. State: "{state}" {BARS}')
                 ops_hours = True
                 if AUTOMATE_DAPROXY:
-                    daproxy.kill_da_proxy(proc_da_proxy)
+                    proc_da_proxy = daproxy.run_da_proxy(FPATH_DA_PROXY)
+                else:
+                    proc_da_proxy = None
 
             if loop_cnt % LOOP_COUNT_UPDATE == 0:
                 date_str, paths_today = automation_tools.check_date(auto_export_paths=PATHS_AUTO_EXPORT,
@@ -107,6 +109,10 @@ def automate_ir_cameras(active_cameras=()):
             if ops_hours:
                 ops_hours = False
                 logger.info(f'>>> GOODNIGHT (Resuming at {START_TIME}) <<<')
+
+                if AUTOMATE_DAPROXY:
+                    daproxy.kill_da_proxy(proc_da_proxy)
+
             time.sleep(TIME_REFRESH_MAIN_LOOP_NON_OPS)
             continue
 
@@ -138,7 +144,7 @@ def automate_ir_cameras(active_cameras=()):
                 # Print updates periodically
                 logger.info(f'Shot {shot} expected in dt: {dt_shot:0.1f} s')
             if not recording:
-                if (dt_shot <= TIME_RECORD_PRE_SHOT):
+                if (dt_shot <= TIME_RECORD_PRE_SHOT) and (state == 'Trigger'):
                     if protection_active:
                         # Shot imminent; make sure sci cameras are armed and start protection cameras recording
                         logger.info(f'Starting protection cameras recording {TIME_RECORD_PRE_SHOT:0.1f}s before shot for '
@@ -152,6 +158,10 @@ def automate_ir_cameras(active_cameras=()):
                     if sci_active:
                         # TIME_RECORD_PRE_SHOT before shot
                         armed = automation_tools.arm_scientific_cameras(active_cameras, armed, pixel_coords_image=PIXEL_COORDS_IMAGE)
+            elif recording and (dt_recording_finished < 0):
+                # Recording started based on PreShot state, but Trigger state updated time estimate late after
+                # recording finished. Immediately set state to not recording so can start recording again on next loop.
+                recording = False
 
         elif (dt_shot < 0) and (dt_recording_finished >= 0):
             # Shot started.
