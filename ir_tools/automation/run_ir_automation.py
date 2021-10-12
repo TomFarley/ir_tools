@@ -165,10 +165,10 @@ def automate_ir_cameras(active_cameras=()):
 
         elif (dt_shot < 0) and (dt_recording_finished >= 0):
             # Shot started.
-            if protection_active:
+            if protection_active and recording:
                 if (loop_cnt % LOOP_COUNT_UPDATE == 0) or (dt_recording_finished < 2):
                     logger.info(f'Recording should finish in dt: {dt_recording_finished:0.1f} s')
-            elif sci_active:
+            elif sci_active and (state == 'Trigger'):
                 # Protection cameras not active, so log start of scientific recording now
                 recording = True
         elif (dt_recording_finished <= -5) and (recording):
