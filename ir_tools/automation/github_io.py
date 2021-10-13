@@ -67,12 +67,13 @@ def git_pull(path_fn, args=('-q',), remote='origin', branch='main', ):
     return proccess
 
 def read_file_backwards(path_fn, n_lines=100):
-    out = ''
+    lines = []
     for i, line in enumerate(reversed(list(open(path_fn)))):
         if i >= n_lines:
             break
-        out += line
+        lines.append(line)
         # print(line.rstrip())
+    out = '\n'.join(lines)
     return out
 
 def copy_log_tail_to_file(fn_in, fn_out, n_lines=200):
