@@ -68,7 +68,7 @@ def git_pull(path_fn, args=('-q',), remote='origin', branch='main', ):
 
 def read_file_backwards(path_fn, n_lines=100):
     out = ''
-    for i, line in enumerate(reversed(list(open("filename")))):
+    for i, line in enumerate(reversed(list(open(path_fn)))):
         if i >= n_lines:
             break
         out += line
