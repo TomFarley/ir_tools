@@ -66,6 +66,15 @@ def git_pull(path_fn, args=('-q',), remote='origin', branch='main', ):
     logger.info(f'Git push "{path_fn}"')
     return proccess
 
+def read_file_backwards(path_fn, n_lines=100):
+    out = ''
+    for i, line in enumerate(reversed(list(open("filename")))):
+        if i >= n_lines:
+            break
+        out += line
+        # print(line.rstrip())
+    return out
+
 def copy_log_tail_to_file(fn_in, fn_out, n_lines=200):
     # update file
     if not Path(fn_in).is_file():
@@ -73,8 +82,9 @@ def copy_log_tail_to_file(fn_in, fn_out, n_lines=200):
     if not Path(fn_out).is_file():
         logger.info(f'Remote log file does not exist: {fn_in}')
 
-    out = subprocess.run(['tail', '-n', str(n_lines), fn_in], stdout=subprocess.PIPE, ).stdout.decode()
-    out = out.replace('\n', '<br>')
+    # out = subprocess.run(['tail', '-n', str(n_lines), fn_in], stdout=subprocess.PIPE, ).stdout.decode()
+    # out = out.replace('\n', '<br>')
+    out = read_file_backwards(fn_in, n_lines=n_lines)
     with open(fn_out, 'w') as f:
         f.write(out)
     logger.info(f'Copied tail from "{fn_in}" to "{fn_out}"')
