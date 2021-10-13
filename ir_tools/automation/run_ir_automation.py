@@ -14,13 +14,13 @@ import logging, signal, time, datetime, os
 import numpy as np
 
 import ir_tools.automation
-from ir_tools.automation import automation_tools, daproxy, flir_researchir_automation, ircam_works_automation
+from ir_tools.automation import automation_tools, daproxy, flir_researchir_automation, ircam_works_automation, github_io
 from ir_tools.automation.automation_settings import (PATHS_AUTO_EXPORT, PATHS_FREIA_EXPORT, FNS_FORMAT_MOVIE,
                                                      AUTOMATE_DAPROXY, TIME_REFRESH_MAIN_LOOP_OPS, TIME_DURATION_RECORD,
                                                      TIME_REFRESH_MAIN_LOOP_PRESHOT, TIME_REFRESH_MAIN_LOOP_NON_OPS,
                                                      TIME_RECORD_PRE_SHOT, LOOP_COUNT_UPDATE, STOP_TIME, START_TIME,
                                                      PIXEL_COORDS_IMAGE, IRCAM_CAMERAS, FLIR_CAMERAS,
-                                                     PROTECTION_CAMERAS, FPATH_LOG, BARS, FREIA_HOME_PATH)
+                                                     PROTECTION_CAMERAS, BARS, REMOTE_LOG_FILES, FPATH_LOG)
 from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot, get_state
 
 logger = logging.getLogger('ir_tools.automation.run_ir_automation')
@@ -29,6 +29,8 @@ def automate_ir_cameras(active_cameras=()):
     active_cameras = dict(active_cameras)
     if len(active_cameras) == 0:
         raise ValueError('No active cameras')
+
+    host = os.environ['COMPUTERNAME']
 
     protection_active = np.any([active for camera, active in active_cameras.items() if camera in PROTECTION_CAMERAS])
     ircam_active = np.any([active for camera, active in active_cameras.items() if camera in IRCAM_CAMERAS])
@@ -104,6 +106,7 @@ def automate_ir_cameras(active_cameras=()):
                 date_str, paths_today = automation_tools.check_date(auto_export_paths=PATHS_AUTO_EXPORT,
                                                                     freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras,
                                                                     date_str_prev=date_str, paths_today_prev=paths_today)
+                github_io.update_remote_log(fn_local_log=FPATH_LOG, fn_remote_log=REMOTE_LOG_FILES[host])
 
         else:
             if ops_hours:
@@ -185,12 +188,12 @@ def automate_ir_cameras(active_cameras=()):
             for camera, active in active_cameras.items():
                 if active:
                     n_files[camera] = automation_tools.organise_new_movie_file(PATHS_AUTO_EXPORT[camera],
-                                                   FNS_FORMAT_MOVIE[camera], shot,
-                                                   path_export_today=paths_today.get(camera),
-                                                   n_file_prev=n_files[camera], t_shot_change=times['shot_change'],
-                                                   camera=camera,
-                                                   path_freia_export=paths_today.get(f'{camera}_freia', None),
-                                                   overwrite_files=after_abort)
+                                                                               FNS_FORMAT_MOVIE[camera], shot,
+                                                                               path_export_today=paths_today.get(camera),
+                                                                               n_file_prev=n_files[camera], t_shot_change=times['shot_change'],
+                                                                               camera=camera,
+                                                                               path_freia_export=paths_today.get(f'{camera}_freia', None),
+                                                                               overwrite_files=after_abort)
                     armed[camera] = False
 
         if (dt_re_arm <= 0) or (state == 'PostShot'):
