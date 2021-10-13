@@ -7,7 +7,7 @@ Created:
 """
 
 import logging
-
+from pathlib import Path
 import os
 import subprocess
 
@@ -68,6 +68,11 @@ def git_pull(path_fn, args=('-q',), remote='origin', branch='main', ):
 
 def copy_log_tail_to_file(fn_in, fn_out, n_lines=200):
     # update file
+    if not Path(fn_in).is_file():
+        logger.warning(f'Local log file does not exist: {fn_in}')
+    if not Path(fn_out).is_file():
+        logger.info(f'Remote log file does not exist: {fn_in}')
+
     out = subprocess.run(['tail', '-n', str(n_lines), fn_in], stdout=subprocess.PIPE, ).stdout.decode()
     out = out.replace('\n', '<br>')
     with open(fn_out, 'w') as f:
