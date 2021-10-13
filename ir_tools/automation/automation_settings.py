@@ -44,7 +44,7 @@ FNS_FORMAT_MOVIE = {'LWIR1': '{shot}.RAW',
                     'MWIR1': '{shot}.ats',
                     'Px_protection': '{shot}.seq',  # shot=(\d+) for regex match
                     'SW_beam_dump': '{shot}.seq'}
-REMOTE_LOG_FILES = {'H0012': 'D:\\ir_log\\LWIR1.md'
+REMOTE_LOG_FILES = {'H0012': 'D:\\ir_log\\LWIR1.md',
                     'MWIR-PC1': 'D:\\ir_log\\MWIR1.md'}
 TIME_REFRESH_MAIN_LOOP_OPS = 25  # sec. The MAST-U Abort state seems to only last for ~10s
 TIME_REFRESH_MAIN_LOOP_PRESHOT = 1  # sec. The MAST-U Abort state seems to only last for ~10s
