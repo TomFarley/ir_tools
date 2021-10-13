@@ -494,12 +494,12 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
 
     saved_shots = shot_nos_from_fns(fns_sorted, pattern=fn_format_movie.format(shot='(\d+)'))
     if n_files == n_file_prev:
-        logger.warning(f'Number of files, {n_files}, has not changed after shot! {path_auto_export}')
+        logger.warning(f'{camera}: Number of files, {n_files}, has not changed after shot! {path_auto_export}')
 
     if n_files > 0:
         fn_new, age_fn_new, age_fn_new_sec, t_mod_fn_new, shot_fn_new = Path(fns_sorted[0]), ages[0], ages_sec[0], t_mod[0], saved_shots[0],
         path_fn_new = path_auto_export / fn_new
-        logger.info(f'File "{fn_new}" for shot {shot_fn_new} ({shot} expected) saved {age_fn_new.total_seconds():0.1f} s ago')
+        logger.info(f'{camera}: File "{fn_new}" for shot {shot_fn_new} ({shot} expected) saved {age_fn_new.total_seconds():0.1f} s ago')
 
         if t_shot_change is not None:
             dt_file_since_shot_change = (t_mod_fn_new - t_shot_change).total_seconds()
@@ -515,30 +515,30 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
                 file_already_exists = path_fn_expected.is_file()
                 if (not file_already_exists) or (overwrite_files):
                     if file_already_exists:
-                        logger.warning(f'Overwriting existing file: {path_fn_expected}')
-                    logger.info(f'Renaming latest file from "{path_fn_new.name}" to "{path_fn_expected.name}"')
+                        logger.warning(f'{camera}: Overwriting existing file: {path_fn_expected}')
+                    logger.info(f'{camera}: Renaming latest file from "{path_fn_new.name}" to "{path_fn_expected.name}"')
                     correct_fn = move_file(path_fn_new, path_fn_expected)
 
                     path_fn_new = path_fn_expected
                     if not path_fn_expected.is_file():
-                        logger.warning(f'File rename failed')
+                        logger.warning(f'{camera}: File rename failed')
                     else:
                         correct_fn = True
                 else:
-                    logger.warning(f'>>>> Expected shot no file already exists: "{path_fn_expected.name}".  <<<<  '
+                    logger.warning(f'>>>> Expected shot no {camera} file already exists: "{path_fn_expected.name}".  <<<<  '
                                    f'Not sure how to rename "{fn_new}". Pulses saved: {saved_shots} ({fns_sorted})')
                     correct_fn = False
 
             else:
-                logger.warning(f'>>>> Newest file is older than time of change to latest shot number. <<<<')
-                logger.warning(f'File created at {t_mod_fn_new}. Shot state change at {t_shot_change}. '
+                logger.warning(f'>>>> Newest {camera} file is older than time of change to latest shot number. <<<<')
+                logger.warning(f'{camera} file created at {t_mod_fn_new}. Shot state change at {t_shot_change}. '
                                f'dt={dt_file_since_shot_change:0.1f} < 0 ')
                 correct_fn = False
         elif (dt_file_since_shot_change is None) or (dt_file_since_shot_change >= 0):
             # Name already correct and file age ok
             correct_fn = True
         else:
-            logger.warning(f'File has correct name but is too old ({dt_file_since_shot_change} s): {path_fn_new}')
+            logger.warning(f'{camera}: File has correct name but is too old ({dt_file_since_shot_change} s): {path_fn_new}')
             correct_fn = False
 
         if correct_fn and path_fn_new.is_file() and (path_export_today is not None):
@@ -561,9 +561,9 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
 
 
         elif not correct_fn:
-            logger.warning(f'Didn\'t copy file as rename success = {correct_fn}')
+            logger.warning(f'{camera}: Didn\'t copy file as rename success = {correct_fn}')
         else:
-            logger.warning(f'New file does not exist: {path_fn_new}. Rename success = {correct_fn}')
+            logger.warning(f'{camera}: New file does not exist: {path_fn_new}. Rename success = {correct_fn}')
     return n_files
 
 def move_and_back_copy_file(path_fn_original, path_fn_destination, verbose=False):
