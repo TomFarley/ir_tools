@@ -5,8 +5,7 @@
 
 Created: 
 """
-import datetime
-import logging
+import datetime, os, logging
 from typing import Union, Iterable, Sequence, Tuple, Optional, Any, Dict
 from pathlib import Path
 
@@ -16,6 +15,8 @@ import xarray as xr
 import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
+
+host = os.environ['COMPUTERNAME']
 
 AUTOMATE_DAPROXY = False
 
@@ -54,7 +55,7 @@ TIME_RECORD_PRE_SHOT = 6  # sec. How long before shot is expected to start recor
 TIME_DURATION_RECORD = 15  # sec. Duration of protection movie recording set in ResearchIR
 TIME_DELAY_REARM = 120  # sec. Time to wait for clock train to finish.
 TIME_TYPICAL_MIN_INTERSHOT = 3 * 60  # sec. Normally at least 3 min between shots
-LOOP_COUNT_UPDATE = 8  # loops. No point in updating this too often as Github pages site lag by ~20 min
+LOOP_COUNT_UPDATE = 1  # loops. No point in updating this too often as Github pages site lag by ~20 min
 STOP_TIME = datetime.time(20, 10)
 START_TIME = datetime.time(7, 50)
 PIXEL_COORDS_IMAGE = {'LWIR1': (500, 766),  # Record button
@@ -65,7 +66,7 @@ BARS = '='*10
 IRCAM_CAMERAS = ['LWIR1', 'LWIR2', 'MWIR3']
 FLIR_CAMERAS = ['MWIR1', 'MWIR2']
 PROTECTION_CAMERAS = ['Px_protection', 'SW_beam_dump']
-FPATH_LOG = Path('IR_automation.log')
+FPATH_LOG = Path(f'D:\\ir_tools\\ir_tools\\automation\\log\\IR_automation_{host}.log')
 YES = '✓'
 NO = '✕'
 PATH_HDD_OUT = Path(r'D:\\MAST-U\LWIR_IRCAM1_HM04-A\Operations\To_be_exported')
