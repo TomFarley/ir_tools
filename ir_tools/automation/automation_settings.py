@@ -55,9 +55,10 @@ TIME_RECORD_PRE_SHOT = 6  # sec. How long before shot is expected to start recor
 TIME_DURATION_RECORD = 15  # sec. Duration of protection movie recording set in ResearchIR
 TIME_DELAY_REARM = 120  # sec. Time to wait for clock train to finish.
 TIME_TYPICAL_MIN_INTERSHOT = 3 * 60  # sec. Normally at least 3 min between shots
-LOOP_COUNT_UPDATE = 1  # loops. No point in updating this too often as Github pages site lag by ~20 min
-STOP_TIME = datetime.time(20, 10)
-START_TIME = datetime.time(7, 50)
+LOOP_COUNT_UPDATE = 10  # loops. No point in updating this too often as Github pages site lag by ~20 min
+TIME_STOP_OPS = datetime.time(20, 15)
+TIME_STOP_EARLY_ARM = datetime.time(18, 45)  # Stop arming (FLIR) camera after shot in evening to prevent morning freeze
+TIME_START_OPS = datetime.time(7, 50)
 PIXEL_COORDS_IMAGE = {'LWIR1': (500, 766),  # Record button
                       'MWIR1': (360, 155),  # Top left window, record button at (360, 55)
                       'Px_protection': (1465, 155),  # Top right window

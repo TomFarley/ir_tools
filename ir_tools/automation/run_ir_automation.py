@@ -18,7 +18,8 @@ from ir_tools.automation import automation_tools, daproxy, flir_researchir_autom
 from ir_tools.automation.automation_settings import (PATHS_AUTO_EXPORT, PATHS_FREIA_EXPORT, FNS_FORMAT_MOVIE,
                                                      AUTOMATE_DAPROXY, TIME_REFRESH_MAIN_LOOP_OPS, TIME_DURATION_RECORD,
                                                      TIME_REFRESH_MAIN_LOOP_PRESHOT, TIME_REFRESH_MAIN_LOOP_NON_OPS,
-                                                     TIME_RECORD_PRE_SHOT, LOOP_COUNT_UPDATE, STOP_TIME, START_TIME,
+                                                     TIME_STOP_EARLY_ARM,
+                                                     TIME_RECORD_PRE_SHOT, LOOP_COUNT_UPDATE, TIME_STOP_OPS, TIME_START_OPS,
                                                      PIXEL_COORDS_IMAGE, IRCAM_CAMERAS, FLIR_CAMERAS,
                                                      PROTECTION_CAMERAS, BARS, REMOTE_LOG_FILES, FPATH_LOG)
 from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot, get_state
@@ -87,7 +88,7 @@ def automate_ir_cameras(active_cameras=()):
         shot, state, times, shot_updated, state_updated = daproxy.update_state_and_shot(FPATH_MSG_LOG, shot, state, times)
         shot_next = (shot + 1) if isinstance(shot, int) else None
 
-        if ((t_now.time() > START_TIME) and (t_now.time() < STOP_TIME)) and (t_now.weekday() <= 5) or state_updated:
+        if ((t_now.time() > TIME_START_OPS) and (t_now.time() < TIME_STOP_OPS)) and (t_now.weekday() <= 5) or state_updated:
             if state in ('PreShot', 'Trigger'):
                 time.sleep(TIME_REFRESH_MAIN_LOOP_PRESHOT)
             else:
@@ -106,12 +107,11 @@ def automate_ir_cameras(active_cameras=()):
                 date_str, paths_today = automation_tools.check_date(auto_export_paths=PATHS_AUTO_EXPORT,
                                                                     freia_export_paths=PATHS_FREIA_EXPORT, active_cameras=active_cameras,
                                                                     date_str_prev=date_str, paths_today_prev=paths_today)
-                github_io.update_remote_log(fn_local_log=FPATH_LOG, fn_remote_log=REMOTE_LOG_FILES[host])
 
         else:
             if ops_hours:
                 ops_hours = False
-                logger.info(f'>>> GOODNIGHT (Resuming at {START_TIME}) <<<')
+                logger.info(f'>>> GOODNIGHT (Resuming at {TIME_START_OPS}) <<<')
 
                 if AUTOMATE_DAPROXY:
                     daproxy.kill_da_proxy(proc_da_proxy)
@@ -146,6 +146,9 @@ def automate_ir_cameras(active_cameras=()):
             if (protection_active and (loop_cnt % LOOP_COUNT_UPDATE == 0) or (dt_shot < 7)) or state_updated:
                 # Print updates periodically
                 logger.info(f'Shot {shot} expected in dt: {dt_shot:0.1f} s')
+            if state_updated:
+                github_io.update_remote_log(fn_local_log=FPATH_LOG, fn_remote_log=REMOTE_LOG_FILES[host])
+
             if not recording:
                 if (dt_shot <= TIME_RECORD_PRE_SHOT) and (state == 'Trigger'):
                     if protection_active:
@@ -195,8 +198,11 @@ def automate_ir_cameras(active_cameras=()):
                                                                                path_freia_export=paths_today.get(f'{camera}_freia', None),
                                                                                overwrite_files=after_abort)
                     armed[camera] = False
+            github_io.update_remote_log(fn_local_log=FPATH_LOG, fn_remote_log=REMOTE_LOG_FILES[host])
 
-        if (dt_re_arm <= 0) or (state == 'PostShot'):
+        if ((dt_re_arm <= 0) or (state == 'PostShot')) and (t_now.time() < TIME_STOP_EARLY_ARM):
+            # Stop arming (FLIR) camera after shots in evening to prevent morning freeze
+            # (still arm imediatley before shot)
             armed = automation_tools.arm_scientific_cameras(active_cameras, armed,
                                                             pixel_coords_image=PIXEL_COORDS_IMAGE)
 
