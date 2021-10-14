@@ -26,7 +26,7 @@ def update_remote_log(fn_local_log, fn_remote_log):
         logger.info(f'Failed to update remote log {fn_remote_log}:' + repr(e))
         return 1
     else:
-        logger.info(f'Updated remote log: {fn_remote_log}')
+        logger.info(f'Pushed update to remote log: {fn_remote_log}')
         return 0
 
 def git_commit(path_fn, message='auto-update', args=('-a',)):
@@ -90,7 +90,7 @@ def copy_log_tail_to_file(fn_in, fn_out, n_lines=200):
     out = read_file_backwards(fn_in, n_lines=n_lines)
     with open(fn_out, 'w') as f:
         f.write(out)
-    logger.info(f'Copied tail from "{fn_in}" to "{fn_out}"')
+    # logger.info(f'Copied tail from "{fn_in}" to "{fn_out}"')
     return out
 
 if __name__ == '__main__':
