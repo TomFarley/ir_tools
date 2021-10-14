@@ -210,8 +210,10 @@ if __name__ == '__main__':
     if HOST == 'MWIR-PC1':
         active_cameras = {'LWIR1': False, 'MWIR1': True, 'Px_protection': True, 'SW_beam_dump': False}
         # active_cameras = {'LWIR1': False, 'MWIR1': False, 'Px_protection': True, 'SW_beam_dump': False}
-    else:
+    elif HOST == 'H0012':
         active_cameras = {'LWIR1': True, 'MWIR1': False, 'Px_protection': False, 'SW_beam_dump': False}
+    else:
+        raise ValueError(f'Host machine not recognised: "{HOST}"')
     logger.info(f'Starting automation on "{HOST}" PC ')
 
     automate_ir_cameras(active_cameras=active_cameras)
