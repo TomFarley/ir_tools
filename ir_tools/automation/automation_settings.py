@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 
-host = socket.gethostname()
+HOST = socket.gethostname().upper()
 
 AUTOMATE_DAPROXY = False
 
@@ -67,7 +67,7 @@ BARS = '='*10
 IRCAM_CAMERAS = ['LWIR1', 'LWIR2', 'MWIR3']
 FLIR_CAMERAS = ['MWIR1', 'MWIR2']
 PROTECTION_CAMERAS = ['Px_protection', 'SW_beam_dump']
-FPATH_LOG = Path(f'D:\\ir_tools\\ir_tools\\automation\\log\\IR_automation_{host}.log')
+FPATH_LOG = Path(f'D:\\ir_tools\\ir_tools\\automation\\log\\IR_automation_{HOST}.log')
 YES = '✓'
 NO = '✕'
 PATH_HDD_OUT = Path(r'D:\\MAST-U\LWIR_IRCAM1_HM04-A\Operations\To_be_exported')
