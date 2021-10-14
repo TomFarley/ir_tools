@@ -23,10 +23,10 @@ def update_remote_log(fn_local_log, fn_remote_log):
         git_pull(fn_remote_log)
         git_push(fn_remote_log)
     except Exception as e:
-        logger.info('Failed to update remote log ' + repr(e))
+        logger.info(f'Failed to update remote log {fn_remote_log}:' + repr(e))
         return 1
     else:
-        logger.info('Updated remote log: ' + YES)
+        logger.info(f'Updated remote log: {fn_remote_log}')
         return 0
 
 def git_commit(path_fn, message='auto-update', args=('-a',)):
@@ -35,7 +35,7 @@ def git_commit(path_fn, message='auto-update', args=('-a',)):
     proccess = subprocess.run(['git', '-C', os.path.dirname(path_fn), 'commit', *args, '-m', message, ],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, )
-    logger.info(f'Git commit "{path_fn}", "{message}"')
+    # logger.info(f'Git commit "{path_fn}", "{message}"')
     return proccess
 
 def git_push(path_fn, args=('-q',), remote='origin', branch='main', ):
@@ -55,7 +55,7 @@ def git_push(path_fn, args=('-q',), remote='origin', branch='main', ):
     proccess = subprocess.run(['git', '-C', os.path.dirname(path_fn), 'push', *args, remote, branch],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, )
-    logger.info(f'Git push "{path_fn}"')
+    # logger.info(f'Git push "{path_fn}"')
     return proccess
 
 def git_pull(path_fn, args=('-q',), remote='origin', branch='main', ):
@@ -63,7 +63,7 @@ def git_pull(path_fn, args=('-q',), remote='origin', branch='main', ):
     proccess = subprocess.run(['git', '-C', os.path.dirname(path_fn), 'pull', *args, remote, branch],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, )
-    logger.info(f'Git push "{path_fn}"')
+    # logger.info(f'Git pull "{path_fn}"')
     return proccess
 
 def read_file_backwards(path_fn, n_lines=100, join_str='', line_end_chars='\\\n'):
