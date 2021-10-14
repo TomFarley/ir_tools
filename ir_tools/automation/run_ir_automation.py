@@ -80,6 +80,8 @@ def automate_ir_cameras(active_cameras=()):
     shot_next = (shot + 1) if isinstance(shot, int) else None
     logger.info(f'{BARS} Ready for shot {shot_next} in state "{state}" {BARS}')
 
+    github_io.update_remote_log(fn_local_log=FPATH_LOG, fn_remote_log=REMOTE_LOG_FILES[HOST])
+
     while True:
         loop_cnt += 1
         t_now = datetime.datetime.now()
