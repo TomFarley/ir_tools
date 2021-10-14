@@ -37,8 +37,8 @@ def automate_ir_cameras(active_cameras=()):
     sci_active = ircam_active or flir_active
 
     logger.info(
-        f'Starting camera automation for cameras: '
-        f'{", ".join([camera for camera, active in active_cameras.items() if active])}')
+        f'**Starting camera automation for cameras: '
+        f'{", ".join([camera for camera, active in active_cameras.items() if active])}**')
     logger.info(f'Windows should be organised on screen according to PowerToys Fancy Zones '
                 f'(see IR Operating Instructions)')
 
