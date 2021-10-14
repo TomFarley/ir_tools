@@ -9,7 +9,7 @@ Created: Tom Farley
 Date: Sept 2021
 """
 
-import logging, signal, time, datetime, os
+import logging, signal, time, datetime, os, socket
 
 import numpy as np
 
@@ -31,7 +31,7 @@ def automate_ir_cameras(active_cameras=()):
     if len(active_cameras) == 0:
         raise ValueError('No active cameras')
 
-    host = os.environ['COMPUTERNAME']
+    host = socket.gethostname()
 
     protection_active = np.any([active for camera, active in active_cameras.items() if camera in PROTECTION_CAMERAS])
     ircam_active = np.any([active for camera, active in active_cameras.items() if camera in IRCAM_CAMERAS])
@@ -208,7 +208,7 @@ def automate_ir_cameras(active_cameras=()):
 
 
 if __name__ == '__main__':
-    host = os.environ['COMPUTERNAME']
+    host = socket.gethostname()
     # TODO: Set with argpass?
     if host == 'MWIR-PC1':
         active_cameras = {'LWIR1': False, 'MWIR1': True, 'Px_protection': True, 'SW_beam_dump': False}

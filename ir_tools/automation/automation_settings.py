@@ -5,7 +5,7 @@
 
 Created: 
 """
-import datetime, os, logging
+import datetime, os, logging, socket
 from typing import Union, Iterable, Sequence, Tuple, Optional, Any, Dict
 from pathlib import Path
 
@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 
-host = os.environ['COMPUTERNAME']
+host = socket.gethostname()
 
 AUTOMATE_DAPROXY = False
 
