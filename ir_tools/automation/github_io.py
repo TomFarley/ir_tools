@@ -23,7 +23,7 @@ def update_remote_log(fn_local_log, fn_remote_log):
         git_pull(fn_remote_log)
         git_push(fn_remote_log)
     except Exception as e:
-        logger.info(f'Failed to update remote log {fn_remote_log}:' + repr(e))
+        logger.info(f'**Failed to update remote log {fn_remote_log}**:' + repr(e))
         return 1
     else:
         logger.info(f'Pushed update to remote log: {fn_remote_log}')
@@ -91,6 +91,10 @@ def copy_log_tail_to_file(fn_in, fn_out, n_lines=200):
     with open(fn_out, 'w') as f:
         f.write(out)
     # logger.info(f'Copied tail from "{fn_in}" to "{fn_out}"')
+    return out
+
+def html_color_span(string, color='red'):
+    out = f'<span style="color:{color}">{string}</span>.'
     return out
 
 if __name__ == '__main__':
