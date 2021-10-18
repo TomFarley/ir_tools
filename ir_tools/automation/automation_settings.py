@@ -60,9 +60,9 @@ TIME_STOP_OPS = datetime.time(20, 15)
 TIME_STOP_EARLY_ARM = datetime.time(18, 45)  # Stop arming (FLIR) camera after shot in evening to prevent morning freeze
 TIME_START_OPS = datetime.time(7, 50)
 PIXEL_COORDS_IMAGE = {'LWIR1': (500, 766),  # Record button
-                      'MWIR1': (360, 155),  # Top left window, record button at (360, 55)
-                      'Px_protection': (1465, 155),  # Top right window
-                      'SW_beam_dump': (1465, 955)}  # Bottom right window
+                      'MWIR1': (360, 95),  # Top left window, record button at (360, 55)
+                      'Px_protection': (1465, 95),  # Top right window
+                      'SW_beam_dump': (1465, 645)}  # Bottom right window, record button at (1465, 615)
 BARS = '='*10
 IRCAM_CAMERAS = ['LWIR1', 'LWIR2', 'MWIR3']
 FLIR_CAMERAS = ['MWIR1', 'MWIR2']

@@ -210,8 +210,8 @@ def automate_ir_cameras(active_cameras=()):
 if __name__ == '__main__':
     # TODO: Set with argpass?
     if HOST == 'MWIR-PC1':
-        active_cameras = {'LWIR1': False, 'MWIR1': True, 'Px_protection': True, 'SW_beam_dump': False}
-        # active_cameras = {'LWIR1': False, 'MWIR1': False, 'Px_protection': True, 'SW_beam_dump': False}
+        # active_cameras = {'LWIR1': False, 'MWIR1': True, 'Px_protection': True, 'SW_beam_dump': False}
+        active_cameras = {'LWIR1': False, 'MWIR1': True, 'Px_protection': True, 'SW_beam_dump': True}
     elif HOST == 'H0012':
         active_cameras = {'LWIR1': True, 'MWIR1': False, 'Px_protection': False, 'SW_beam_dump': False}
     else:

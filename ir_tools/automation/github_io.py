@@ -18,7 +18,7 @@ def update_remote_log(fn_local_log, fn_remote_log):
     """ push top-level MWI log file to github """
 
     try:
-        copy_log_tail_to_file(fn_local_log, fn_remote_log, n_lines=100)
+        copy_log_tail_to_file(fn_local_log, fn_remote_log, n_lines=300)
         git_commit(fn_remote_log, message='auto-update')
         git_pull(fn_remote_log)
         git_push(fn_remote_log)
@@ -78,7 +78,7 @@ def read_file_backwards(path_fn, n_lines=100, join_str='', line_end_chars='\\\n'
     out = join_str.join(lines)
     return out
 
-def copy_log_tail_to_file(fn_in, fn_out, n_lines=200):
+def copy_log_tail_to_file(fn_in, fn_out, n_lines=250):
     # update file
     if not Path(fn_in).is_file():
         logger.warning(f'Local log file does not exist: {fn_in}')
