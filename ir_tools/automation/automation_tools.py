@@ -485,7 +485,7 @@ def arm_scientific_cameras(active_cameras, armed, pixel_coords_image):
 
 
 def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export_today, n_file_prev, t_shot_change,
-                            camera, path_freia_export=None, overwrite_files=False):
+                            camera, path_freia_export=None, overwrite_files=False, verbose=False):
 
     fns_autosaved = filenames_in_dir(path_auto_export)
     fns_sorted, i_order, t_mod, ages, ages_sec = sort_files_by_age(fns_autosaved, path=path_auto_export)
@@ -516,9 +516,10 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
                 if (not file_already_exists) or (overwrite_files):
                     if file_already_exists:
                         logger.warning(f'{camera}: Overwriting existing file: {path_fn_expected}')
-                    logger.info(f'{camera}: Renaming latest file from "{path_fn_new.name}" to '
-                                f'"{path_fn_expected.name}"')
-                    correct_fn = move_file(path_fn_new, path_fn_expected)
+                    if verbose:
+                        logger.info(f'{camera}: Renaming latest file from "{path_fn_new.name}" to '
+                                    f'"{path_fn_expected.name}"')
+                    correct_fn = move_file(path_fn_new, path_fn_expected, verbose=verbose)
 
                     path_fn_new = path_fn_expected
                     if not path_fn_expected.is_file():
@@ -548,20 +549,11 @@ def organise_new_movie_file(path_auto_export, fn_format_movie, shot, path_export
             # logger.info(f'path_fn_new ({path_fn_new.is_file()}): {path_fn_new}')
 
             path_fn_today = path_export_today / path_fn_new.name
-            success_move_today = move_and_back_copy_file(path_fn_new, path_fn_today)
+            success_move_today = move_and_back_copy_file(path_fn_new, path_fn_today, verbose=verbose)
 
             if camera not in PROTECTION_CAMERAS:
                 path_fn_freia = path_freia_export / path_fn_new.name
-
-                # logger.info(f'Freia home ({FREIA_HOME_PATH.is_dir()}): {FREIA_HOME_PATH}')
-                # logger.info(f'Freia dest file ({path_fn_freia.is_file()}): {path_fn_new}')
-                # dest_parent = path_fn_freia
-                # for i in np.arange(4):
-                #     dest_parent = dest_parent.parent
-                #     logger.info(f'Freia dest file parent ({dest_parent.is_dir()}): {dest_parent}')
-
-                success_move_freia = move_and_back_copy_file(path_fn_today, path_fn_freia)
-
+                success_move_freia = move_and_back_copy_file(path_fn_today, path_fn_freia, verbose=verbose)
 
         elif not correct_fn:
             logger.warning(f'{camera}: **Didn\'t copy file as rename success = {correct_fn}**')
@@ -593,7 +585,8 @@ def move_and_back_copy_file(path_fn_original, path_fn_destination, verbose=False
         success_copy = copy_file(path_fn_original, path_fn_destination, verbose=False)
 
         if success_copy:
-            logger.info(f'Copied file to "{path_fn_destination}" (after failing to move it there)')
+            if verbose:
+                logger.info(f'Copied file to "{path_fn_destination}" (after failing to move it there)')
             success = True
         else:
             logger.warning(f'Failed to copy file directly to {path_fn_destination} from {path_fn_original}')
