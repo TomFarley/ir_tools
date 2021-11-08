@@ -593,6 +593,16 @@ def move_and_back_copy_file(path_fn_original, path_fn_destination, verbose=False
 
     return success
 
+def submit_freia_batch_job(fn_bash_scirpt='F:\\work\\analysis_scripts\\scripts\\operations\\'
+                                          'pulse_processor_launcher.sh'):
+    """
+    :param fn_bash_scirpt: bash script running llsubmit
+    """
+    username='tfarley'
+    password = ''
+    os.system(f'putty -ssh {username}@freia023.hpc.l -pw {password} -m {fn_bash_scirpt}')
+    print('Freia job submitted')
+
 if __name__ == '__main__':
     fn = '~/data/movies/diagnostic_pc_transfer/next_mast_u_shot_no.csv'
     # fn = '~/ccfepc/T/tfarley/next_mast_u_shot_no.csv'

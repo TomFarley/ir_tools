@@ -274,6 +274,26 @@ if __name__ == '__main__':
     # pulse = 30458
     # pulse = 29934
     # pulse = 30009
+    # Full frame M7 shots after camera moved from Andy Thornton's IR/MAST_records/MWIR_locations_M7_100111.xls
+    # pulse = 19156  # nbi south beam dump, 25 mm
+    # pulse = 19277  # Lower divertor
+    # pulse = 19374  # lower divertor
+    # pulse = 19457  # lower divertor
+    # pulse = 19776  # lower divertor
+    # pulse = 20059  # lower divertor
+    # pulse = 20421  # lower divertor
+    # pulse = 20558  # View changes upper #4?
+    # pulse = 20854  # Lower divertor #4
+    # pulse = 20958  # Lower divertor #1
+    # pulse = 21249  # Lower divertor #1
+    # pulse = 21410  # Lower divertor #1
+    # pulse = 21474  # Lower divertor #5
+    # pulse = 21497  # Lower divertor #1
+    # pulse = 21893  # Lower divertor #4
+    # pulse = 22020  # Lower divertor #5
+    # pulse = 22070  # Lower divertor #1
+    # pulse = 22143  # Lower divertor #4
+    # pulse = 22194  # Lower divertor #1
 
     # Full frame ait (MAST):
     # pulse = 26957      #
@@ -281,7 +301,18 @@ if __name__ == '__main__':
     # pulse = 27232              #
     # pulse = 27642                  #
     # pulse = 27880                      #
-    pulse = 29936                          #
+    # pulse = 29936                          #
+    # Full frame M7 shots after camera moved from Andy Thornton's IR/MAST_records/LWIR_locations_M7_100111.xls
+    pulse = 24160   # . Calibration for 24172, 24173 requested by Siobhan
+
+
+
+
+
+
+
+
+
 
     # Full frame ait (MAST-U):
     # pulse = 30459

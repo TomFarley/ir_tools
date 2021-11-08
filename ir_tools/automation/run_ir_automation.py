@@ -21,7 +21,8 @@ from ir_tools.automation.automation_settings import (PATHS_AUTO_EXPORT, PATHS_FR
                                                      TIME_STOP_EARLY_ARM,
                                                      TIME_RECORD_PRE_SHOT, LOOP_COUNT_UPDATE, TIME_STOP_OPS, TIME_START_OPS,
                                                      PIXEL_COORDS_IMAGE, IRCAM_CAMERAS, FLIR_CAMERAS,
-                                                     PROTECTION_CAMERAS, BARS, REMOTE_LOG_FILES, FPATH_LOG, HOST)
+                                                     PROTECTION_CAMERAS, BARS, REMOTE_LOG_FILES, FPATH_LOG,
+                                                     HOST, ACTIVE_CAMERAS_FOR_HOST)
 from ir_tools.automation.daproxy import FPATH_DA_PROXY, FPATH_MSG_LOG, get_shot, get_state
 
 logger = logging.getLogger('ir_tools.automation.run_ir_automation')
@@ -29,7 +30,9 @@ logger = logging.getLogger('ir_tools.automation.run_ir_automation')
 def automate_ir_cameras(active_cameras=()):
     active_cameras = dict(active_cameras)
     if len(active_cameras) == 0:
-        raise ValueError('No active cameras')
+        active_cameras = ACTIVE_CAMERAS_FOR_HOST.get(HOST)
+        if active_cameras is None:
+            raise ValueError(f'Host machine not recognised: "{HOST}"')
 
     protection_active = np.any([active for camera, active in active_cameras.items() if camera in PROTECTION_CAMERAS])
     ircam_active = np.any([active for camera, active in active_cameras.items() if camera in IRCAM_CAMERAS])
@@ -37,7 +40,7 @@ def automate_ir_cameras(active_cameras=()):
     sci_active = ircam_active or flir_active
 
     logger.info(
-        f'**Starting camera automation for cameras: '
+        f'**Starting camera automation on "{HOST}" PC for cameras: '
         f'{", ".join([camera for camera, active in active_cameras.items() if active])}**')
     logger.info(f'Windows should be organised on screen according to PowerToys Fancy Zones '
                 f'(see IR Operating Instructions)')
@@ -206,17 +209,7 @@ def automate_ir_cameras(active_cameras=()):
             armed = automation_tools.arm_scientific_cameras(active_cameras, armed,
                                                             pixel_coords_image=PIXEL_COORDS_IMAGE)
 
-
 if __name__ == '__main__':
     # TODO: Set with argpass?
-    if HOST == 'MWIR-PC1':
-        # active_cameras = {'LWIR1': False, 'MWIR1': True, 'Px_protection': True, 'SW_beam_dump': False}
-        active_cameras = {'LWIR1': False, 'MWIR1': True, 'Px_protection': True, 'SW_beam_dump': True}
-    elif HOST == 'H0012':
-        active_cameras = {'LWIR1': True, 'MWIR1': False, 'Px_protection': False, 'SW_beam_dump': False}
-    else:
-        raise ValueError(f'Host machine not recognised: "{HOST}"')
-    logger.info(f'Starting automation on "{HOST}" PC ')
-
-    automate_ir_cameras(active_cameras=active_cameras)
+    automate_ir_cameras(active_cameras=())
     pass

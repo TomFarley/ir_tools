@@ -18,7 +18,27 @@ logger = logging.getLogger(__name__)
 
 HOST = socket.gethostname().upper()
 
+# ==================== Check these settings for current camera setup ====================
+
+# Set which cameras are run from each control PC here
+ACTIVE_CAMERAS_FOR_HOST = {
+    'MWIR-PC1':
+        # active_cameras = {'LWIR1': False, 'MWIR1': True, 'Px_protection': True, 'SW_beam_dump': False}
+        {'LWIR1': False, 'MWIR1': True, 'Px_protection': True, 'SW_beam_dump': True},
+     'H0012':
+        {'LWIR1': True, 'MWIR1': False, 'Px_protection': False, 'SW_beam_dump': False}
+    }
+
+# Set pixel coordinates corresponding to current window layout
+PIXEL_COORDS_IMAGE = {'LWIR1': (500, 766),  # Record button
+                      'MWIR1': (360, 95),  # Top left window, record button at (360, 55)
+                      'Px_protection': (1465, 95),  # Top right window
+                      'SW_beam_dump': (1465, 645)}  # Bottom right window, record button at (1465, 615)
+
+# Set True to try to launch DAproxy process from python
 AUTOMATE_DAPROXY = False
+
+# =========================================================================================
 
 _FREIA_HOME_PATH_OPTIONS = ['\\\\samba-1.hpc.l\\home\\', '\\\\samba-2.hpc.l\\home\\', 'H:\\\\home\\', 'F:\\\\home\\',
                             '\\\\samba-1.hpc.l\\', '\\\\samba-2.hpc.l\\', 'H:\\\\', 'F:\\\\']
@@ -59,10 +79,7 @@ LOOP_COUNT_UPDATE = 10  # loops. No point in updating this too often as Github p
 TIME_STOP_OPS = datetime.time(20, 15)
 TIME_STOP_EARLY_ARM = datetime.time(18, 45)  # Stop arming (FLIR) camera after shot in evening to prevent morning freeze
 TIME_START_OPS = datetime.time(7, 50)
-PIXEL_COORDS_IMAGE = {'LWIR1': (500, 766),  # Record button
-                      'MWIR1': (360, 95),  # Top left window, record button at (360, 55)
-                      'Px_protection': (1465, 95),  # Top right window
-                      'SW_beam_dump': (1465, 645)}  # Bottom right window, record button at (1465, 615)
+
 BARS = '='*10
 IRCAM_CAMERAS = ['LWIR1', 'LWIR2', 'MWIR3']
 FLIR_CAMERAS = ['MWIR1', 'MWIR2']
