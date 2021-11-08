@@ -5,6 +5,10 @@ info. Replaces previous scripts without DAproxy.
 Works with FLIR ResearchIR software for SC7500 cameras and AX5 protection cameras
 Works with IRCAM Works for Velox cameras
 
+See IR Operating Instructions for documentation on how to use these scripts to automate scientific and protection camera
+ data collection
+https://ukaeauk-my.sharepoint.com/:w:/g/personal/tom_farley_ukaea_uk/EVVIiuQqh1hLjeEwuKIOB9MBBnI1DE36LBTqfJi7XPRB_w?e=lUDYN1
+
 Created: Tom Farley
 Date: Sept 2021
 """
