@@ -147,7 +147,7 @@ def update_next_shot_file(shot_no_next, fn_shot='~/ccfepc/T/tfarley/next_mast_u_
                 logger.warning(f'Failed to organise IRcam raw files: {e}')
 
         if organise_flir_ats:
-            from ir_tools.data_formats.convert_movies_to_ipx import convert_ats_files_archive_to_ipx
+            from ir_tools.data_formats.ircam_raw_movies_to_ipx import convert_ats_files_archive_to_ipx
             path_in = '~/data/movies/mast_u/rir_ats_files/{date}'
             fn_meta = '/home/tfarley/data/movies/mast_u/rir_ats_files/rir_meta.json'
             convert_ats_files_archive_to_ipx(pulses=[shot_no_file], path_in=path_in, copy_ats_file=True, fn_meta=fn_meta)

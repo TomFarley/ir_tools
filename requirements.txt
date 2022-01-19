@@ -4,4 +4,5 @@ xarray
 pandas
 matplotlib
 opencv-python
+openpyxl >= 3.0.0
 fire
