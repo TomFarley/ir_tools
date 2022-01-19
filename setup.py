@@ -14,7 +14,7 @@ setup(
     # package_data={},
     # include_package_data=True,
     install_requires=[
-        "numpy >= 1.12.0",
+        "numpy>=1.12.0",
         "scipy",
         "xarray",
         "pandas",
@@ -22,7 +22,7 @@ setup(
         "opencv-python",
         'fire'
     ],
-    extras_require=['pyuda'],
+    # extras_require=['pyuda'],
     python_requires='>=3',
     setup_requires=['pytest-runner'],
     # test_suite='tests.test_suite_fast',  # 'tests.test_suite_slow'
