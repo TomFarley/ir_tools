@@ -6,10 +6,11 @@
 Created: 
 """
 
-import logging
+import logging as _logging
 
-logger = logging.getLogger(__name__)
-logger.propagate = False
+_logging.basicConfig()
+logger_ir_tools = _logging.getLogger(__name__)
+# logger.propagate = False
 
 from . import automation
 from . import data_formats
