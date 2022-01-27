@@ -13,8 +13,8 @@ from datetime import datetime, timedelta
 
 from fire.interfaces import io_basic
 from fire.misc.utils import make_iterable
-from ir_tools.data_formats.ircam_raw_movies_to_ipx import (generate_json_meta_data_file_for_ircam_raw,
-    generate_ipx_file_from_ircam_raw_movie)
+from ir_tools.data_formats.ircam_raw_movies_to_ipx import (generate_ipx_file_from_ircam_raw_movie)
+from ir_tools.data_formats.convert_first_campaign_movies_to_ipx import generate_json_movie_meta_data_file
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -29,6 +29,7 @@ def organise_ircam_raw_files(path_in='/home/tfarley/data/movies/diagnostic_pc_tr
                              meta=None, camera_settings=None, n_files=None, write_ipx=True, overwrite_ipx=True):
     from fire.interfaces.io_utils import filter_files_in_dir
     from fire.interfaces.camera_data_formats import get_ircam_raw_int_nframes_and_shape
+
 
     today_str = datetime.now().strftime('%Y-%m-%d')
     date_str = today_str if (date == 'today') else date
@@ -71,8 +72,8 @@ def organise_ircam_raw_files(path_in='/home/tfarley/data/movies/diagnostic_pc_tr
         nframes, shape = get_ircam_raw_int_nframes_and_shape(fn_raw_src)
 
         fn_meta_out = fn_meta.format(**meta)
-        generate_json_meta_data_file_for_ircam_raw(fn_raw_dest.parent, fn_meta_out, nframes, image_shape=shape,
-                                                   meta_data_dict=camera_settings)
+        generate_json_movie_meta_data_file(fn_raw_dest.parent, fn_meta_out, nframes, image_shape=shape,
+                                           meta_data_dict=camera_settings)
         if write_ipx:
             # Create ipx file in same directory
             fn_ipx = fn_raw_dest.with_name(fn_ipx_format.format(pulse=keys))

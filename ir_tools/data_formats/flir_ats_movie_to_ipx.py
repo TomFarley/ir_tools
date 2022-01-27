@@ -7,17 +7,14 @@ Created:
 """
 
 import logging
-from pathlib import Path
 
-import numpy as np
-import pandas as pd
-import xarray as xr
-import matplotlib.pyplot as plt
 from matplotlib import pyplot as plt
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
 path_ats = '~/data/movies/diagnostic_pc_transfer/rir/{date}'
+
 
 def generate_ipx_file_from_flir_ats_movie(path_fn_ats, path_fn_ipx, pulse, verbose=True, plot_check=True):
     # from fire.interfaces.camera_data_formats import read_ircam_raw_int16_sequence_file
@@ -42,8 +39,8 @@ def generate_ipx_file_from_flir_ats_movie(path_fn_ats, path_fn_ipx, pulse, verbo
                                           apply_nuc=False, create_path=True, verbose=True)
 
     if plot_check:
-        n = 250
         frame_numbers_out, frame_times_out, data_out = read_movie_data_ipx(path_fn_ipx)
+        n = int(np.mean(frame_numbers_out))
         meta_new = read_movie_meta_ipx(path_fn_ipx)
         frame_new = data_out[n]
         frame_original = frame_data[n]
