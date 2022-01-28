@@ -410,24 +410,36 @@ def annimate_movie_data(frame_data, frame_times=None, frame_numbers=None, ax=Non
 
     return fig, ax, anim
 
-if __name__ == '__main__':
-    # fn = '/projects/SOL/Data/Cameras/IR/RIT/2021-08-24/None.RAW'
-    # fn = '/projects/SOL/Data/Cameras/IR/RIT/2021-08-24/44793.RAW'
-    # fn = '/projects/SOL/Data/Cameras/SA1/{shot}/C001H001S0001/C001H001S0001-00.mraw'
-    shot_start = 29852
-    n_shots = 100
-    frame_numbers = np.arange(0, 1000, 10)
+def overplot_calibration_wireframe_on_sa1_movie_range(path_fn_calib, shots):
+    # This is the location for the fast 100kHz visible camera data that isn't accessible via UDA.
+    # Need to use pyIpx to read the mraw files directly.
     path_fn_mraw_pattern = '/projects/SOL/Data/Cameras/SA1/{shot}/C001H001S0001/C001H001S0001-{{n:02d}}.mraw'
-
-    path_fn_calib = '/home/tfarley/calcam2/calibrations/p29852-f1807-t0.21808-ae_ga_sh-v1-k23_diss.ccc'
 
     calcam_calib = calcam.Calibration(path_fn_calib)
 
-    for shot in np.arange(shot_start, n_shots):
+    # Plot a subset of frames (every 10th frame over first 1000 frames) to speed up reading and plotting movie
+    frame_numbers = np.arange(0, 1000, 10)
+
+    # Plot the same calcam calibration wireframe on a series of movies
+    for shot in shots:
         path_fn_mraw = path_fn_mraw_pattern.format(shot=shot)
         try:
             annimate_mraw_movie(path_fn_mraw, n=frame_numbers, calcam_calib=calcam_calib, shot=shot)
         except AssertionError as e:
-            pass
-    # annimate_raw_movie(fn)
+            pass  # Skip shots without a movie
     pass
+
+
+if __name__ == '__main__':
+    # fn = '/projects/SOL/Data/Cameras/IR/RIT/2021-08-24/None.RAW'
+    # fn = '/projects/SOL/Data/Cameras/IR/RIT/2021-08-24/44793.RAW'
+    # fn = '/projects/SOL/Data/Cameras/SA1/{shot}/C001H001S0001/C001H001S0001-00.mraw'
+
+    # One of my calibrations for 29852
+    path_fn_calib = '/home/tfarley/calcam2/calibrations/p29852-f1807-t0.21808-ae_ga_sh-v1-k23_diss.ccc'
+
+    shot_start = 29811
+    n_shots = 300
+    shots = np.arange(shot_start, shot_start+n_shots)
+
+    overplot_calibration_wireframe_on_sa1_movie_range(path_fn_calib, shots)
