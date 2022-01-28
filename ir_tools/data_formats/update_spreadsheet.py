@@ -18,6 +18,7 @@ from openpyxl import Workbook, load_workbook
 logger = logging.getLogger(__name__)
 
 def modify_row_in_spreadsheet(path_fn, row_dict, col_names):
+    path_fn = Path(path_fn)
     shot_modify = row_dict['shot']
 
     # Convert units and types
@@ -63,7 +64,10 @@ def modify_row_in_spreadsheet(path_fn, row_dict, col_names):
         if header and (shot_cell == 'Pulse'):
             header = False
 
+    path_fn_mod = path_fn.with_name('mod_'+path_fn.name)
+
     wb.save(path_fn)  # './meta_data_record/ss_modified.xlsx')
+    wb.save(path_fn_mod)  # './meta_data_record/ss_modified.xlsx')
 
 
 def modify_row_in_spreadsheet_old(path_fn, row_dict):

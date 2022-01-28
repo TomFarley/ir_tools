@@ -151,6 +151,7 @@ def convert_flir_ats_files_archive_to_ipx(shots=None, skip_existing=True, n_conv
     path_fn_ss = './meta_data_record/Record_of_MWIR1_FLIR_SC7500_6580045_Operating_Settings.xlsx'
     col_names = ['shot', 'date', 'exposure', 'fps', 'frame_period', 'n_frames', 'duration', 'trigger',
                      'detector_window', 'lens', 'view', 'filter', 'issues', 'comments']
+    ext = 'ats'
 
     path_raw_root = path_pre_ipx_archive / tag.upper()  #  Path('~/data/movies/mast_u/').expanduser()
 
@@ -164,11 +165,11 @@ def convert_flir_ats_files_archive_to_ipx(shots=None, skip_existing=True, n_conv
 
     for date_dir in date_dirs:
 
-        path_fns_ats = sorted(date_dir.glob('*.ats'))
-        path_fns_ats += sorted((date_dir.glob('*.ATS')))
+        path_fns_ats = sorted(date_dir.glob(f'*.{ext}'))
+        path_fns_ats += sorted((date_dir.glob(f'*.{ext.upper()}')))
         # print(path_fns_raw)
         logger.info(f'converted={len(shots_converted)}, skipped={len(shots_skipped)}, failed={len(shots_failed)}')
-        logger.info(f'"{date_dir.parent}" date_dir contains {len(path_fns_ats)} raw/RAW files: {date_dir}')
+        logger.info(f'"{date_dir.parent}" date_dir contains {len(path_fns_ats)} {ext}/{ext.upper()} files: {date_dir}')
 
         for path_fn_ats in path_fns_ats:
             try:
@@ -432,8 +433,10 @@ def generate_json_movie_meta_data_file(path, fn, n_frames, image_shape, meta_dat
     # TODO: Check this is necessary? Don't think clock signal eg xpx/clock/lwir-1 does ensure frame at t=0s
     # frame_times = list(safe_arange(0, -t_before_pulse, -period)[::-1])
     # frame_times = frame_times + list(safe_arange(period, (n_frames-len(frame_times))*period, period))
-    if frame_times is None:
-        if not np.isnan(period):
+    if (frame_times is None) or np.all(np.isnan(frame_times)):
+        if n_frames > 1:
+            if np.isnan(period):
+                period = 1/fps
             frame_times = safe_arange(-t_before_pulse, -t_before_pulse+((n_frames-1)*period), period).tolist()
         else:
             frame_times = [-t_before_pulse]
@@ -506,6 +509,7 @@ def look_up_ir_meta_data_from_spreadsheet(path_fn_meta_data_ss, shot, diag_tag_r
     meta_data['date'] = str(meta_data['date'])
     meta_data['frame_period'] = meta_data['frame_period'] * 1e-6  # convert us to seconds
     # meta_data['lens'] = f'{meta_data["lens"]}mm'  # convert mm to string (Past MAST IR IPX convention)
+    # TODO: Add assertion checks of magnitude of values ie correct units
 
     # Spreadsheet has detector window formatted as used to set up camera
     top, left, height, width = list_repr_to_list(meta_data['detector_window'])
@@ -549,8 +553,9 @@ if __name__ == '__main__':
     # shots = np.arange(start, start+n)
     shots_rit_failed = [43360, 43656, 43683, 43743, 43878, 44041, 44073, 44073, 44577, 44625, 44625, 44758, 44869, 44906, 44923, 44980, 45071, 45085, 45200, 45401]
     shots_rir_failed = [43953, 44009, 44036, 44037, 44038, 44040, 44041, 44042, 44043, 44044, 44045, 44046, 44047, 44050, 44051, 44054, 44203, 44234, 44258, 44258, 44258, 44258, 44304, 44258, 44304, 44555, 44556, 44557, 44558, 44560, 44563, 44564, 44565, 44566, 44567, 44568, 44569, 44581, 44582, 44585, 44586, 44590, 44591, 44586, 44590, 44591, 44599, 44600, 44586, 44590, 44591, 44602, 44603, 44604, 44605, 44606, 44608, 44610, 44600, 44629, 44630, 44632, 44633, 44634, 44635, 44636, 44637, 44638, 44640, 44641, 44642, 44644, 44645, 44646, 44648, 44649, 44651, 44652, 44634, 44635, 44636, 44637, 44638, 44640, 44641, 44642, 44644, 44645, 44646, 44647, 44649, 44650, 44652, 44653, 44654, 44655, 44657, 44659, 44660, 44661, 44662, 44663, 44664, 44665, 44666, 44667, 44668, 44669, 44670, 44671, 44673, 44676, 44678, 44680, 44684, 44686, 44690, 44692, 44694, 44634, 44635, 44636, 44637, 44638, 44640, 44641, 44642, 44644, 44645, 44646, 44647, 44649, 44650, 44652, 44653, 44654, 44655, 44657, 44659, 44660, 44661, 44662, 44663, 44664, 44665, 44666, 44667, 44668, 44669, 44670, 44671, 44672, 44673, 44674, 44677, 44678, 44679, 44680, 44681, 44682, 44683, 44684, 44685, 44686, 44687, 44688, 44689, 44690, 44691, 44634, 44635, 44636, 44637, 44638, 44640, 44641, 44642, 44644, 44645, 44646, 44647, 44649, 44650, 44652, 44653, 44654, 44655, 44657, 44659, 44660, 44661, 44662, 44663, 44664, 44665, 44666, 44667, 44668, 44669, 44670, 44671, 44672, 44673, 44674, 44677, 44678, 44679, 44680, 44681, 44682, 44683, 44684, 44685, 44686, 44687, 44688, 44689, 44690, 44691, 44696, 44697, 44698, 44699, 44700, 44701, 44702, 44703, 44704, 44705, 44706, 44707, 44709, 44710, 44711, 44712, 44713, 44717, 44722, 44723, 44724, 44720, 44721, 44722, 44723, 44724, 44725, 44726, 44728, 44730, 44737, 44738, 44739, 44740, 44741, 44742, 44743, 44744, 44745, 44746, 44747, 44748, 44749, 44751, 44753, 44754, 44755, 44756, 44757, 44758, 44775, 44832, 44851, 44906, 44923, 44923, 44924, 44980, 45005, 45006, 45007, 45008, 45009, 45010, 45011, 45012, 45013, 45085, 45119, 45301, 45316]
-    # shots = None
-    shots = shots_rit_failed
-    convert_ircam_raw_files_archive_to_ipx(shots=shots, skip_existing=False, n_convert=None)
-    # convert_flir_ats_files_archive_to_ipx(shots=shots, skip_existing=False, n_convert=None, plot_check=False)
+    shots = None
+    # shots = shots_rit_failed
+    # shots = shots_rir_failed
+    # convert_ircam_raw_files_archive_to_ipx(shots=shots, skip_existing=False, n_convert=None)
+    convert_flir_ats_files_archive_to_ipx(shots=shots, skip_existing=False, n_convert=None, plot_check=False)
     pass
