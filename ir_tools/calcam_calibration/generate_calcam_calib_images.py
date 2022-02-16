@@ -18,25 +18,25 @@ from skimage.filters import rank
 from skimage.morphology import disk
 from skimage.io import imsave
 
-from ccfepyutils.mpl_tools import get_previous_artist_color, annotate_axis
-from ccfepyutils.image import hist_image_equalisation
-from fire.plugins.movie_plugins.uda import read_movie_data
+from calcam.image_enhancement import enhance_image
+
+from fire.plotting.plot_tools import get_previous_artist_color, annotate_axis
+from fire.camera_tools import image_processing
 from fire.plugins.plugins_movie import MovieReader
 from fire.camera_tools.image_processing import find_outlier_pixels
+from fire.plugins.machine_plugins import mast_u
 
 logger = logging.getLogger(__name__)
 # logger.setLevel(logging.DEBUG)
 
-# def movie_intensity_variation():
 
-
-def generate_calcam_calib_images(pulse=30378, camera='rir', machine='mast', n_start=None, n_end=None, n_nuc=(1, 1),
+def generate_calcam_calib_images(pulse=30378, diag_tag_raw='rir', machine='mast', n_start=None, n_end=None, n_nuc=(1, 1),
                                  n_images=5, selection_stat='max', use_raw=False, path_out='.', date=None):
     """
 
     Args:
         pulse:
-        camera:
+        diag_tag_raw:
         machine:
         n_start:
         n_end:
@@ -50,12 +50,14 @@ def generate_calcam_calib_images(pulse=30378, camera='rir', machine='mast', n_st
     # TODO: Switch to call plugin agnostic movie reader class
     print(f'Reading movie data...')
 
+    meta_data = mast_u.pulse_meta_data(shot=pulse, diag_tag=diag_tag_raw, tag_variants=True)
+
     movie_reader = MovieReader()
-    movie_data, origin = movie_reader.read_movie_data(pulse=pulse, camera=camera, machine=machine, n_start=n_start,
-                                                      n_end=n_end, meta=dict(date=date))
+    movie_data, origin = movie_reader.read_movie_data(pulse=pulse, diag_tag_raw=diag_tag_raw, machine=machine,
+                                                      n_start=n_start, n_end=n_end, meta=meta_data)
     frame_nos, frame_times, frame_data_raw = movie_data
     # frame_nos, frame_times, frame_data_raw = read_movie_data(pulse, camera, n_start=n_start, n_end=n_end)
-    print(f'Read data for {len(frame_nos)} frames from movie {camera}, {pulse}')
+    print(f'Read data for {len(frame_nos)} frames from movie {diag_tag_raw}, {pulse}')
     frame_shape = np.array(frame_data_raw.shape)[1:]
     frame_rate = 1/np.mean(np.diff(frame_times))
     if True:
@@ -72,8 +74,8 @@ def generate_calcam_calib_images(pulse=30378, camera='rir', machine='mast', n_st
                                           'n': ('t', frame_nos)},
                                   dims=['t', 'y_pix', 'x_pix'])
 
-    movie_data_nuc, origin = movie_reader.read_movie_data(pulse=pulse, camera=camera, machine=machine,
-                                                          n_start=n_nuc[0], n_end=n_nuc[1], meta=dict(date=date))
+    movie_data_nuc, origin = movie_reader.read_movie_data(pulse=pulse, diag_tag_raw=diag_tag_raw, machine=machine,
+                                                          n_start=n_nuc[0], n_end=n_nuc[1], meta=meta_data)
     # movie_data_nuc = frame_data_raw[n_nuc[0]:n_nuc[1]]
     frame_nuc = movie_data_nuc[2].min(axis=0)
 
@@ -90,10 +92,10 @@ def generate_calcam_calib_images(pulse=30378, camera='rir', machine='mast', n_st
         nuc_str = ''
         logger.warning(f'Using raw data (no NUC)')
 
-    path_out = Path(str(path_out).format(camera=camera, pulse=pulse))
+    path_out = Path(str(path_out).format(diag_tag_raw=diag_tag_raw, pulse=pulse))
     path_out_summaries = path_out / 'summaries'
     path_out_summaries.mkdir(exist_ok=True, parents=True)
-    fn = '{camera}_{pulse}_{{n}}{nuc_str}_{{enh}}.png'.format(camera=camera, pulse=pulse, nuc_str=nuc_str)
+    fn = '{camera}_{pulse}_{{n}}{nuc_str}_{{enh}}.png'.format(camera=diag_tag_raw, pulse=pulse, nuc_str=nuc_str)
 
     data = xr.Dataset(coords={'t': frame_times, 'n': ('t', frame_nos)})
     axis = (1, 2)
@@ -141,13 +143,16 @@ def generate_calcam_calib_images(pulse=30378, camera='rir', machine='mast', n_st
     plt.legend()
     ax.set_ylabel('DL')
     plt.tight_layout()
-    plt.savefig(path_out_summaries / f'movie_variation_{camera}_{pulse}.png',
+    plt.savefig(path_out_summaries / f'movie_variation_{diag_tag_raw}_{pulse}.png',
                 bbox_inches='tight', transparent=True, dpi=200)
     # plt.show()
 
     cmap = plt.cm.gray
     annotations = ['Raw', 'Bad pixels\nremoved', 'NUC', 'Contrast\nstretch 1', 'Contrast\nstretch 2',
-                   'Global\nequalisation', 'Adaptive\nequalisation', 'Local\nequalisation']
+                   'Global\nequalisation', 'Adaptive\nequalisation',
+                   'Calcam\nenhancment'
+                   # 'Local\nequalisation'
+                   ]
     annot_fontsize = 10
     annot_pos = (0.5, 0.85)
     if np.all(frame_shape > 60):
@@ -163,9 +168,9 @@ def generate_calcam_calib_images(pulse=30378, camera='rir', machine='mast', n_st
         n = int(frame['n'])
         print(f'Saving images for n={n}, t={t} (i={i})')
         fig, axes = plt.subplots(2, 4, sharex=True, sharey=True)
-        fig.suptitle(f'{camera}, {pulse}, n={n}, t={t:0.4f} s (rank={i+1})')
+        fig.suptitle(f'{diag_tag_raw}, {pulse}, n={n}, t={t:0.4f} s (rank={i+1})')
         axes = axes.flatten()
-        bad_pixels, frame_no_dead = find_outlier_pixels(frame_raw, tol=30, check_edges=True)
+        bad_pixels, frame_no_dead = find_outlier_pixels(frame_raw, n_sigma_tol=30, check_edges=True)
         print(f'Identified {bad_pixels.shape[1]} bad pixels')
         img = img_as_float(frame.astype(int))
         img_raw = img_as_float(frame_raw.astype(int))
@@ -214,7 +219,7 @@ def generate_calcam_calib_images(pulse=30378, camera='rir', machine='mast', n_st
         # Global equalization
         i_ax += 1
         ax = axes[i_ax]
-        img_eq = exposure.equalize_hist(img)
+        img_eq = exposure.equalize_hist(img, nbins=2**13)
         ax.imshow(img_eq, cmap=cmap, aspect=aspect)
         annotate_axis(ax, annotations[i_ax], x=annot_pos[0], y=annot_pos[1], fontsize=annot_fontsize)
 
@@ -223,24 +228,38 @@ def generate_calcam_calib_images(pulse=30378, camera='rir', machine='mast', n_st
             i_ax += 1
             ax = axes[i_ax]
             # img_adapteq = exposure.equalize_adapthist(img, kernel_size=np.array(img.shape)/12, clip_limit=0.03)
-            img_adapteq = hist_image_equalisation(img, image_equalisation_adaptive=True, clip_limit=2,
-                                                  tile_grid_size=(8, 8))
-            imsave(path_out / fn.format(n=n, enh='eq_adapt'), img_adapteq)
+            img_adapteq = image_processing.hist_image_equalisation(img, image_equalisation_adaptive=True,
+                                                                   # clip_limit=2,
+                                                                   clip_limit=20,
+                                                  # tile_grid_size=(8, 8)
+                                                  # tile_grid_size=(21, 21)
+                                                  tile_grid_size=(1, 1)
+                                                                   )
+            # imsave(path_out / fn.format(n=n, enh='eq_adapt'), img_adapteq)
             ax.imshow(img_adapteq, cmap=cmap, aspect=aspect)
             annotate_axis(ax, annotations[i_ax], x=annot_pos[0], y=annot_pos[1], fontsize=annot_fontsize)
         except Exception as e:
             pass
 
         # Local equalisation
+        # i_ax += 1
+        # ax = axes[i_ax]
+        # img_loc = rank.equalize(img, disk(20))
+        # imsave(path_out / fn.format(n=n, enh='eq_loc'), img_loc)
+        # ax.imshow(img_loc, cmap=cmap, aspect=aspect)
+        # annotate_axis(ax, annotations[i_ax], x=annot_pos[0], y=annot_pos[1], fontsize=annot_fontsize)
+
+        # Calcam enhancment combination
         i_ax += 1
         ax = axes[i_ax]
-        img_loc = rank.equalize(img, disk(20))
-        imsave(path_out / fn.format(n=n, enh='eq_loc'), img_loc)
-        ax.imshow(img_loc, cmap=cmap, aspect=aspect)
+        img_calcam_enhance = enhance_image(img, target_msb=15, target_noise=2500, tiles=(30, 30), downsample=False,
+                                           median=False, bilateral=False)
+        imsave(path_out / fn.format(n=n, enh='calcam_enhance'), img_calcam_enhance)
+        ax.imshow(img_calcam_enhance, cmap=cmap, aspect=aspect)
         annotate_axis(ax, annotations[i_ax], x=annot_pos[0], y=annot_pos[1], fontsize=annot_fontsize)
 
-        imsave(path_out / fn.format(n=n, enh='rescale_1'), img_rescale_1)
-        imsave(path_out / fn.format(n=n, enh='rescale_2'), img_rescale_2)
+        # imsave(path_out / fn.format(n=n, enh='rescale_1'), img_rescale_1)
+        # imsave(path_out / fn.format(n=n, enh='rescale_2'), img_rescale_2)
         imsave(path_out / fn.format(n=n, enh='eq_glob'), img_eq)
 
         for ax in axes:
@@ -248,6 +267,7 @@ def generate_calcam_calib_images(pulse=30378, camera='rir', machine='mast', n_st
         fig.subplots_adjust(wspace=0.05, hspace=0.05)
         plt.savefig(path_out_summaries / fn.format(n=n, enh='summary'),
                     bbox_inches='tight', transparent=True, dpi=300)
+
         # plt.show()
         pass
     print(f'Summary figures saved to {path_out_summaries}')
@@ -324,10 +344,13 @@ if __name__ == '__main__':
     # pulse = 44760
     # pulse = 44673  # DN-700-SXD-OH
     # pulse = 43952  # early focus
+    # pulse = 43804  # First plasma after refocus on 16-04-21
+    pulse = 43989  # First good calibration shot after camera moved on 14-05-21
+    # pulse = 45360  # ELMy shot
 
 
-    n_start = 200
-    # n_start = None
+    # n_start = 350
+    n_start = None
     n_end = None
     # n_start = 3200
     # n_end = 3500
@@ -338,16 +361,16 @@ if __name__ == '__main__':
     # n_images = 15
 
     n_nuc = (1, 1)
-    # use_raw = False
-    use_raw = True
+    use_raw = False
+    # use_raw = True
 
     # selection_stat = 'max'
     selection_stat = '98%'
     # selection_stat = 'mean'
 
     # path_out = Path('./calibration_images/{camera}/{pulse}')
-    path_out = Path('~/calcam2/input_images/{camera}/{pulse}').expanduser()
-    generate_calcam_calib_images(pulse=pulse, camera=camera, machine=machine, n_start=n_start, n_end=n_end,
+    path_out = Path('~/calcam2/input_images/{diag_tag_raw}/{pulse}').expanduser()
+    generate_calcam_calib_images(pulse=pulse, diag_tag_raw=camera, machine=machine, n_start=n_start, n_end=n_end,
                                  use_raw=use_raw, date='2021-05-13',
                                  selection_stat=selection_stat, path_out=path_out, n_images=n_images, n_nuc=n_nuc)
     pass
