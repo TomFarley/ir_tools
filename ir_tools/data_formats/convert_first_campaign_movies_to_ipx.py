@@ -217,7 +217,7 @@ def convert_flir_ats_files_archive_to_ipx(shots=None, skip_existing=True, n_conv
                 #     fns_failed.append(path_fn_ats)
                 #     continue
 
-                meta_data_dict = {**meta_data_dict_file, **meta_data_dict_ss}
+                meta_data_dict = {**meta_data_dict_ss, **meta_data_dict_file}
 
                 meta_data_json = generate_json_movie_meta_data_file(path_fn_meta.parent, fn=fn_meta,
                                                    n_frames=n_frames_file, image_shape=image_shape_file,
@@ -309,8 +309,43 @@ def convert_specific_ircam_raw_pulses_to_ipx(pulses=None, path=None):
 
             ircam_raw_movies_to_ipx.generate_ipx_file_from_ircam_raw_movie(path / fn_raw, path / fn_ipx, pulse=pulse)
 
+def organise_ircam_datac_ipx_files():
+    ext = 'ipx'
+    path_unsorted = path_pre_ipx_archive / 'RIT' / 'ipx_files'
+    tag = 'rit'
 
-def convert_ats_files_archive_to_ipx(pulses=None, path_in=None, date=None, copy_ats_file=False, fn_ats='0{pulse}.ats',
+    path_fns_unsorted = sorted(path_unsorted.glob(f'*.{ext}'))
+    # print(path_fns_raw)
+    logger.info(f'"{path_unsorted}" contains {len(path_fns_unsorted)} {ext} files: {path_fns_unsorted}')
+
+    success = []
+    failed = []
+
+    for path_fn_ipx_unsorted in path_fns_unsorted:
+        try:
+            m = re.search('(\d{5})\.', str(path_fn_ipx_unsorted.name))
+            if m is not None:
+                shot = int(m.groups()[0])
+            else:
+                logger.warning(f'Failed to extract pulse number from ats file: {path_fn_ipx_unsorted}')
+                failed.append(shot)
+                continue
+
+        except Exception as e:
+            failed.append(shot)
+            continue
+
+        path_fn_ipx_new = path_ipx_archive / f'0{str(shot)[:2]}/{shot}' / f'{tag}0{shot}.ipx'
+
+        io_basic.copy_file(path_fn_ipx_unsorted, path_fn_ipx_new, verbose=True, mkdir_dest=True)
+        success.append(shot)
+
+    logger.info(f'Successes: {len(success)}, Failed: {len(failed)}')
+    logger.info(f'Successes: {success}')
+    logger.info(f'Failed: {failed}')
+
+
+def convert_ats_files_archive_to_ipx(pulses=None, path_in=None, exp_date=None, copy_ats_file=False, fn_ats='0{pulse}.ats',
                                      fn_meta='/home/tfarley/data/movies/mast_u/rir_ats_files/rir_meta.json',
                                      n_files=None):
     from fire.interfaces.interfaces import locate_file
@@ -319,13 +354,13 @@ def convert_ats_files_archive_to_ipx(pulses=None, path_in=None, date=None, copy_
 
     success, failed = [], []
 
-    if (date is None) or (date == 'today'):
-        date = datetime.now().strftime('%Y-%m-%d')
+    if (exp_date is None) or (exp_date == 'today'):
+        exp_date = datetime.now().strftime('%Y-%m-%d')
 
     if path_in is not None:
-        path_in = Path(str(path_in).format(date=date)).expanduser()
+        path_in = Path(str(path_in).format(date=exp_date)).expanduser()
     else:
-        path_in = path_root / date
+        path_in = path_root / exp_date
 
     print(f'Path_in: {path_in}')
     io_basic.copy_file(fn_meta, path_in, mkdir_dest=False, verbose=True, overwrite=True)
@@ -453,6 +488,9 @@ def generate_json_movie_meta_data_file(path, fn, n_frames, image_shape, meta_dat
     else:
         logger.warning(f'No clock info for shot {shot}')
 
+    if isinstance(frame_times, np.ndarray):
+        frame_times = frame_times.tolist()
+
     t_range = [min(frame_times), max(frame_times)]
     frame_range = [min(frame_numbers), max(frame_numbers)]
 
@@ -462,6 +500,10 @@ def generate_json_movie_meta_data_file(path, fn, n_frames, image_shape, meta_dat
     top += 1
     # IPX index conventions - left, top etc start are indexed from 1 (0 is missing data)
     bottom, right = top+height, left+width
+    left = meta_data_dict.get('left', left)
+    top = meta_data_dict.get('top', top)
+    bottom = meta_data_dict.get('bottom', bottom)
+    right = meta_data_dict.get('right', right)
 
     dict_out = dict(# IPX1 fields:
                     date_time=date_time, shot=shot, trigger=-t_before_pulse, lens=lens, filter=filter, view=view,
@@ -505,7 +547,7 @@ def look_up_ir_meta_data_from_spreadsheet(path_fn_meta_data_ss, shot, diag_tag_r
 
     # Convert units and types
     meta_data['t_before_pulse'] = np.abs(meta_data['trigger'])  # s
-    meta_data['exposure'] = int(meta_data['exposure'] * 1e3)  # convert ms to us (IPX convention)
+    meta_data['exposure'] = int(meta_data['exposure'] * 1e0)  # keep in us (IPX convention)
     meta_data['date'] = str(meta_data['date'])
     meta_data['frame_period'] = meta_data['frame_period'] * 1e-6  # convert us to seconds
     # meta_data['lens'] = f'{meta_data["lens"]}mm'  # convert mm to string (Past MAST IR IPX convention)
@@ -552,10 +594,13 @@ if __name__ == '__main__':
     # n = 500
     # shots = np.arange(start, start+n)
     shots_rit_failed = [43360, 43656, 43683, 43743, 43878, 44041, 44073, 44073, 44577, 44625, 44625, 44758, 44869, 44906, 44923, 44980, 45071, 45085, 45200, 45401]
-    shots_rir_failed = [43953, 44009, 44036, 44037, 44038, 44040, 44041, 44042, 44043, 44044, 44045, 44046, 44047, 44050, 44051, 44054, 44203, 44234, 44258, 44258, 44258, 44258, 44304, 44258, 44304, 44555, 44556, 44557, 44558, 44560, 44563, 44564, 44565, 44566, 44567, 44568, 44569, 44581, 44582, 44585, 44586, 44590, 44591, 44586, 44590, 44591, 44599, 44600, 44586, 44590, 44591, 44602, 44603, 44604, 44605, 44606, 44608, 44610, 44600, 44629, 44630, 44632, 44633, 44634, 44635, 44636, 44637, 44638, 44640, 44641, 44642, 44644, 44645, 44646, 44648, 44649, 44651, 44652, 44634, 44635, 44636, 44637, 44638, 44640, 44641, 44642, 44644, 44645, 44646, 44647, 44649, 44650, 44652, 44653, 44654, 44655, 44657, 44659, 44660, 44661, 44662, 44663, 44664, 44665, 44666, 44667, 44668, 44669, 44670, 44671, 44673, 44676, 44678, 44680, 44684, 44686, 44690, 44692, 44694, 44634, 44635, 44636, 44637, 44638, 44640, 44641, 44642, 44644, 44645, 44646, 44647, 44649, 44650, 44652, 44653, 44654, 44655, 44657, 44659, 44660, 44661, 44662, 44663, 44664, 44665, 44666, 44667, 44668, 44669, 44670, 44671, 44672, 44673, 44674, 44677, 44678, 44679, 44680, 44681, 44682, 44683, 44684, 44685, 44686, 44687, 44688, 44689, 44690, 44691, 44634, 44635, 44636, 44637, 44638, 44640, 44641, 44642, 44644, 44645, 44646, 44647, 44649, 44650, 44652, 44653, 44654, 44655, 44657, 44659, 44660, 44661, 44662, 44663, 44664, 44665, 44666, 44667, 44668, 44669, 44670, 44671, 44672, 44673, 44674, 44677, 44678, 44679, 44680, 44681, 44682, 44683, 44684, 44685, 44686, 44687, 44688, 44689, 44690, 44691, 44696, 44697, 44698, 44699, 44700, 44701, 44702, 44703, 44704, 44705, 44706, 44707, 44709, 44710, 44711, 44712, 44713, 44717, 44722, 44723, 44724, 44720, 44721, 44722, 44723, 44724, 44725, 44726, 44728, 44730, 44737, 44738, 44739, 44740, 44741, 44742, 44743, 44744, 44745, 44746, 44747, 44748, 44749, 44751, 44753, 44754, 44755, 44756, 44757, 44758, 44775, 44832, 44851, 44906, 44923, 44923, 44924, 44980, 45005, 45006, 45007, 45008, 45009, 45010, 45011, 45012, 45013, 45085, 45119, 45301, 45316]
+    shots_rir_failed = [44009, 44041, 44047, 44054, 44203, 44234, 44258, 44258, 44258, 44258, 44304, 44258, 44304, 44775, 44832, 44851, 44906, 44923, 44923, 44924, 44958, 44960, 44961, 44962, 44963, 44964, 44965, 44966, 44967, 44968, 44969, 44970, 44971, 44972, 44973, 44974, 44975, 44976, 44977, 44978, 44979, 44980, 44981, 44982, 44983, 44984, 44985, 44986, 44987, 44988, 44989, 44990, 44991, 44992, 44993, 44994, 44995, 44996, 44997, 44998, 45085, 45091, 45092, 45093, 45098, 45119, 45137, 45138, 45139, 45140, 45141, 45142, 45143, 45144, 45145, 45146, 45149, 45150, 45151, 45152, 45153, 45154, 45156, 45157, 45161, 45162, 45163, 45164, 45165, 45166, 45167, 45168, 45169, 45170, 45171, 45172, 45173, 45174, 45175, 45176, 45177, 45178, 45179, 45180, 45181, 45182, 45183, 45184, 45211, 45212, 45213, 45214, 45215, 45216, 45218, 45219, 45220, 45221, 45224, 45225, 45226, 45227, 45228, 45229, 45231, 45233, 45234, 45235, 45236, 45237, 45238, 45239, 45240, 45241, 45242, 45243, 45244, 45245, 45246, 45247, 45248, 45251, 45252, 45253, 45254, 45255, 45256, 45257, 45258, 45259, 45260, 45261, 45262, 45264, 45265, 45266, 45267, 45268, 45270, 45271, 45272, 45274, 45275, 45276, 45277, 45278, 45279, 45280, 45281, 45282, 45283, 45284, 45285, 45286, 45287, 45288, 45289, 45290, 45291, 45292, 45293, 45294, 45295, 45296, 45297, 45298, 45299, 45300, 45301, 45302, 45303, 45304, 45305, 45306, 45309, 45310, 45311, 45312, 45313, 45314, 45315, 45316, 45317, 45318, 45319, 45320, 45321, 45322, 45323, 45325, 45326, 45327, 45328, 45329, 45330, 45331, 45332, 45333, 45334, 45335, 45336, 45338, 45339, 45340, 45341, 45344, 45345, 45346, 45347, 45348, 45349, 45350, 45351, 45352, 45353, 45354, 45356, 45357, 45358, 45360, 45361, 45362, 45363, 45364, 45365, 45366, 45367, 45368, 45370, 45371, 45372, 45373, 45374, 45375, 45376, 45377, 45378, 45380, 45381, 45382, 45383, 45386, 45387, 45388, 45390, 45391, 45392, 45393, 45395, 45396, 45397, 45398, 45399, 45400, 45401, 45402, 45403, 45403, 45405, 45406, 45407, 45408, 45409, 45411, 45414, 45415, 45416, 45417, 45418, 45419, 45469, 45472]
+    # shots = [45419]
     shots = None
     # shots = shots_rit_failed
     # shots = shots_rir_failed
-    # convert_ircam_raw_files_archive_to_ipx(shots=shots, skip_existing=False, n_convert=None)
-    convert_flir_ats_files_archive_to_ipx(shots=shots, skip_existing=False, n_convert=None, plot_check=False)
+    # convert_ircam_raw_files_archive_to_ipx(shots=shots, skip_existing=True, n_convert=None)
+    # convert_flir_ats_files_archive_to_ipx(shots=shots, skip_existing=True, n_convert=None, plot_check=False)
+
+    organise_ircam_datac_ipx_files()
     pass
